@@ -1,6 +1,32 @@
 
+
+#[derive(Debug)]
+pub struct LMeta {
+    start : usize,   
+    end : usize,
+}
+
+impl LMeta {
+    fn single(loc : usize) -> Self {
+        LMeta { start: loc, end: loc }
+    }
+}
+
 #[derive(Debug)]
 pub enum Lexeme { 
+    RParen(LMeta),
+    LParen(LMeta),
+    RAngle(LMeta),
+    LAngle(LMeta),
+    RCurl(LMeta),
+    LCurl(LMeta),
+    RSquare(LMeta),
+    LSquare(LMeta),
+    Dot(LMeta),
+    Comma(LMeta),
+    SemiColon(LMeta),
+    Equal(LMeta)
+    RArrow(LMeta)
 
 }
 
