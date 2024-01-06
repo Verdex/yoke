@@ -3,13 +3,14 @@ pub enum Ast {
 
 }
 
-pub enum ParseErrror {
+#[derive(Debug)]
+pub enum ParseError {
 
 }
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f : &mut std::fmt::Formatter) -> std::fmt::Result {
-        
+        write!(f, "")
     }
 }
 
