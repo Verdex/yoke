@@ -32,10 +32,13 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
         }
 
         match x {
-            i!((_, c), _) if c.is_whitespace() => { },
+            i!((_, c)) if c.is_whitespace() => { },
             i!((_, '/'), (_, '*')) => { comment += 1; input.next(); },
             i!((_, '/'), (_, '/')) => { skip_line(&mut input); },
-            //Some(((_, '/'), (_, '/'))) => { skip_line(&mut input); },
+            i!((index, c)) if c.is_numeric() || c == '+' || c == '-' => {
+                let num = lex_number(c, index, &mut input)?;
+                ret.push(num);
+            },
             None => { break; },
             _ => todo!(),
         }
