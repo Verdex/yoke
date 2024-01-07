@@ -57,11 +57,7 @@ fn skip_line(input : input!()) {
     }
 }
 
-fn lex_number(c : char, start : usize, input : input!()) -> Result<Lexeme, LexError> {
-    fn target(x : char) -> bool {
-        x.is_numeric() || x == '+' || x == '-' || x == '.' || x == 'E' || x == 'e'
-    }
-
+fn lex_item(c : char, start : usize, target : fn(char) -> bool, input : input!()) -> Result<(LMeta, String), LexError> {
     let mut end = start;
 
     let mut ret = vec![c];
@@ -84,8 +80,19 @@ fn lex_number(c : char, start : usize, input : input!()) -> Result<Lexeme, LexEr
         }
     }
 
-    Ok(Lexeme::Number(LMeta::multi(start, end), ret.into_iter().collect::<String>()))
+    Ok((LMeta::multi(start, end), ret.into_iter().collect::<String>()))
+} 
+
+fn lex_number(c : char, start : usize, input : input!()) -> Result<Lexeme, LexError> {
+    fn target(x : char) -> bool {
+        x.is_numeric() || x == '+' || x == '-' || x == '.' || x == 'E' || x == 'e'
+    }
+
+    let (meta, item) = lex_item(c, start, target, input)?;
+
+    Ok(Lexeme::Number(meta, item))
 }
+
 
 
 /*
@@ -231,6 +238,24 @@ mod test {
         assert_eq!(output.len(), 1);
         assert_eq!(output[0].meta(), LMeta::single(0));
         assert_eq!(output[0].value(), "7");
+    }
+
+    #[test]
+    fn should_lex_numbers() {
+        let input = "1234.5678E+90 +1234 -1234 +123e-456";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 4);
+        assert_eq!(output[0].meta(), LMeta::multi(0, 12));
+        assert_eq!(output[0].value(), "1234.5678E+90");
+
+        assert_eq!(output[1].meta(), LMeta::multi(14, 18));
+        assert_eq!(output[1].value(), "+1234");
+
+        assert_eq!(output[2].meta(), LMeta::multi(20, 24));
+        assert_eq!(output[2].value(), "-1234");
+
+        assert_eq!(output[3].meta(), LMeta::multi(26, 34));
+        assert_eq!(output[3].value(), "+123e-456");
     }
 
 }
