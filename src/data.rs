@@ -36,6 +36,53 @@ pub enum Lexeme {
     Symbol(LMeta, String),
 }
 
+impl Lexeme {
+    pub fn meta(&self) -> LMeta {
+        use Lexeme::*;
+        match self {
+            RParen(m) => m.clone(),
+            LParen(m) => m.clone(),
+            RAngle(m) => m.clone(),
+            LAngle(m) => m.clone(),
+            RCurl(m) => m.clone(),
+            LCurl(m) => m.clone(),
+            RSquare(m) => m.clone(),
+            LSquare(m) => m.clone(),
+            Dot(m) => m.clone(),
+            Comma(m) => m.clone(),
+            SemiColon(m) => m.clone(),
+            Equal(m) => m.clone(),
+            RArrow(m) => m.clone(),
+            RDoubleArrow(m) => m.clone(),
+            String(m, _) => m.clone(),
+            Number(m, _) => m.clone(),
+            Symbol(m, _) => m.clone(),
+        }
+    }
+    pub fn value(&self) -> String {
+        use Lexeme::*;
+        match self {
+            RParen(_) => ")".into(),
+            LParen(_) => "(".into(),
+            RAngle(_) => ">".into(),
+            LAngle(_) => "<".into(),
+            RCurl(_) => "}".into(),
+            LCurl(_) => "{".into(),
+            RSquare(_) => "]".into(),
+            LSquare(_) => "[".into(),
+            Dot(_) => ".".into(),
+            Comma(_) => ",".into(),
+            SemiColon(_) => ";".into(),
+            Equal(_) => "=".into(),
+            RArrow(_) => "->".into(),
+            RDoubleArrow(_) => "=>".into(),
+            String(_, s) => s.clone(),
+            Number(_, n) => n.clone(),
+            Symbol(_, sym) => sym.clone(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Ast {
 
