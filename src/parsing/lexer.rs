@@ -1,5 +1,4 @@
 
-use std::str::CharIndices;
 
 use crate::data::{Lexeme, LMeta, LexError};
 
