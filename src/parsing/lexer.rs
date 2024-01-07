@@ -1,9 +1,56 @@
 
-use crate::data::{Lexeme, LexError};
+use std::str::CharIndices;
+
+use crate::data::{Lexeme, LMeta, LexError};
+
+macro_rules! i {
+    ($p1:pat, $p2:pat) => { Some( (Some($p1), Some($p2)) ) };
+}
 
 pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
+    let input = input.char_indices().map(|c| Some(c));
+    let initial = input.clone().chain(std::iter::once(None));
+    let mut input = initial.zip(input.skip(1));
 
+    let mut comment = 0;
+
+    let mut ret = vec![];
+    loop {
+        let x = input.next();
+
+        if comment > 0 {
+            match x {
+                i!((_, '/'), (_, '*')) => { comment += 1; },
+                i!((_, '*'), (_, '/')) => { comment -= 1; },
+                _ => { },
+            }
+            continue;
+        }
+
+        match x {
+            i!((_, '/'), (_, '*')) => { comment += 1; },
+            i!((_, '/'), (_, '/')) => { skip_line(&mut input); },
+            //Some(((_, '/'), (_, '/'))) => { skip_line(&mut input); },
+            None => { break; },
+            _ => todo!(),
+        }
+    }
+
+    Ok(ret)
 }
+
+fn skip_line(input : &mut impl Iterator<Item = (Option<(usize, char)>, Option<(usize, char)>)>) {
+    loop {
+        match input.next() {
+            i!(_, (_, c)) if c.is_whitespace() => { break; },
+            _ => { },
+        }
+    }
+}
+
+/*fn lex_number(input : &mut CharIndices) -> Result<Lexeme, LexError> {
+
+}*/
 
 
 /*
@@ -101,3 +148,10 @@ pub (crate) fn parse_string(input : &mut Chars) -> Result<Box<str>, ParseError> 
 }
 
 */
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    //#[test]
+}

@@ -11,7 +11,7 @@ impl LMeta {
         LMeta { start: loc, end: loc }
     }
     fn multi(start : usize, end : usize) -> Self {
-        LMeta { start: loc, end: loc }
+        LMeta { start, end }
     }
 }
 
@@ -57,7 +57,6 @@ impl std::error::Error for ParseError { }
 
 #[derive(Debug)]
 pub enum LexError {
-
 }
 
 impl std::fmt::Display for LexError {
