@@ -1,16 +1,16 @@
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LMeta {
     start : usize,   
     end : usize,
 }
 
 impl LMeta {
-    fn single(loc : usize) -> Self {
+    pub fn single(loc : usize) -> Self {
         LMeta { start: loc, end: loc }
     }
-    fn multi(start : usize, end : usize) -> Self {
+    pub fn multi(start : usize, end : usize) -> Self {
         LMeta { start, end }
     }
 }
