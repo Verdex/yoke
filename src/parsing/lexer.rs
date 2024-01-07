@@ -20,15 +20,16 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
 
         if comment > 0 {
             match x {
-                i!((_, '/'), (_, '*')) => { comment += 1; },
-                i!((_, '*'), (_, '/')) => { comment -= 1; },
+                i!((_, '/'), (_, '*')) => { comment += 1; input.next(); },
+                i!((_, '*'), (_, '/')) => { comment -= 1; input.next(); },
                 _ => { },
             }
             continue;
         }
 
         match x {
-            i!((_, '/'), (_, '*')) => { comment += 1; },
+            i!((_, c), _) if c.is_whitespace() => { },
+            i!((_, '/'), (_, '*')) => { comment += 1; input.next(); },
             i!((_, '/'), (_, '/')) => { skip_line(&mut input); },
             //Some(((_, '/'), (_, '/'))) => { skip_line(&mut input); },
             None => { break; },
@@ -42,7 +43,8 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
 fn skip_line(input : &mut impl Iterator<Item = (Option<(usize, char)>, Option<(usize, char)>)>) {
     loop {
         match input.next() {
-            i!(_, (_, c)) if c.is_whitespace() => { break; },
+            i!(_, (_, c)) if c == '\n' || c == '\r' => { break; },
+            None => { break; },
             _ => { },
         }
     }
@@ -153,5 +155,57 @@ pub (crate) fn parse_string(input : &mut Chars) -> Result<Box<str>, ParseError> 
 mod test {
     use super::*;
 
-    //#[test]
+    #[test]
+    fn should_handle_whitespace() {
+        let output = lex(" \t \r \n ").unwrap();
+        assert_eq!(output.len(), 0);
+    }
+
+    #[test]
+    fn should_handle_comment() {
+        let output = lex(" // comment $ ").unwrap();
+        assert_eq!(output.len(), 0);
+    }
+
+    #[test]
+    fn should_handle_block_comment() {
+        let input = "
+
+    /*
+        block comment $
+
+    */
+
+";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 0);
+    }
+
+    #[test]
+    fn should_handle_nested_block_comment() {
+        let input = "
+
+    /*
+        block comment $
+        /* %%% */
+        /* %%% */
+        /* /* */ */
+    */
+
+";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 0);
+    }
+
+    #[test]
+    fn should_handle_nested_block_with_termination_in_comment() { // TODO need to add something to lex here
+        let input = "
+
+    /*
+    // */
+
+";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 0);
+    }
 }
