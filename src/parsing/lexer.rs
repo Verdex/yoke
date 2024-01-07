@@ -89,28 +89,6 @@ fn lex_number(c : char, start : usize, input : input!()) -> Result<Lexeme, LexEr
 
 
 /*
-pub (crate) fn parse_whitespace(input : &mut Chars) -> Result<(), ParseError> {
-    fn space(input : &mut Chars) -> Result<(), ParseError> {
-        parser!( input => {
-            x <= parse_any;
-            where x.is_whitespace();
-            select ()
-        })
-    }
-
-    parser!( input => {
-        _x <= * space;
-        select ()
-    })
-}
-
-pub (crate) fn parse_digit(input : &mut Chars) -> Result<char, ParseError> {
-    parser!(input => {
-        num <= parse_any;
-        where num.is_digit(10);
-        select num
-    })
-}
 
 pub (crate) fn parse_word(input : &mut Chars) -> Result<Box<str>, ParseError> {
     pat!(underscore: char => char = '_' => '_');
@@ -231,15 +209,19 @@ mod test {
     }
 
     #[test]
-    fn should_handle_nested_block_with_termination_in_comment() { // TODO need to add something to lex here
+    fn should_handle_nested_block_with_termination_in_comment() {
         let input = "
 
     /*
     // */
 
+    77
+
 ";
         let output = lex(input).unwrap();
-        assert_eq!(output.len(), 0);
+        assert_eq!(output.len(), 1);
+        assert_eq!(output[0].meta(), LMeta::multi(24, 25));
+        assert_eq!(output[0].value(), "77");
     }
 
     #[test]
@@ -250,4 +232,5 @@ mod test {
         assert_eq!(output[0].meta(), LMeta::single(0));
         assert_eq!(output[0].value(), "7");
     }
+
 }
