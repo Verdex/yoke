@@ -39,6 +39,10 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
                 let num = lex_number(c, index, &mut input)?;
                 ret.push(num);
             },
+            i!((index, c)) if c.is_alphabetic() || c == '_' => {
+                let num = lex_symbol(c, index, &mut input)?;
+                ret.push(num);
+            },
             None => { break; },
             _ => todo!(),
         }
@@ -93,7 +97,15 @@ fn lex_number(c : char, start : usize, input : input!()) -> Result<Lexeme, LexEr
     Ok(Lexeme::Number(meta, item))
 }
 
+fn lex_symbol(c : char, start : usize, input : input!()) -> Result<Lexeme, LexError> {
+    fn target(x : char) -> bool {
+        x.is_alphanumeric() || x == '_' 
+    }
 
+    let (meta, item) = lex_item(c, start, target, input)?;
+
+    Ok(Lexeme::Symbol(meta, item))
+}
 
 /*
 
@@ -236,6 +248,7 @@ mod test {
         let input = "7";
         let output = lex(input).unwrap();
         assert_eq!(output.len(), 1);
+        assert!(matches!(output[0], Lexeme::Number(_, _)));
         assert_eq!(output[0].meta(), LMeta::single(0));
         assert_eq!(output[0].value(), "7");
     }
@@ -245,17 +258,52 @@ mod test {
         let input = "1234.5678E+90 +1234 -1234 +123e-456";
         let output = lex(input).unwrap();
         assert_eq!(output.len(), 4);
+        assert!(matches!(output[0], Lexeme::Number(_, _)));
         assert_eq!(output[0].meta(), LMeta::multi(0, 12));
         assert_eq!(output[0].value(), "1234.5678E+90");
 
+        assert!(matches!(output[1], Lexeme::Number(_, _)));
         assert_eq!(output[1].meta(), LMeta::multi(14, 18));
         assert_eq!(output[1].value(), "+1234");
 
+        assert!(matches!(output[2], Lexeme::Number(_, _)));
         assert_eq!(output[2].meta(), LMeta::multi(20, 24));
         assert_eq!(output[2].value(), "-1234");
 
+        assert!(matches!(output[3], Lexeme::Number(_, _)));
         assert_eq!(output[3].meta(), LMeta::multi(26, 34));
         assert_eq!(output[3].value(), "+123e-456");
     }
 
+    #[test]
+    fn should_lex_single_letter_and_nothing_else() {
+        let input = "a";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 1);
+        assert!(matches!(output[0], Lexeme::Symbol(_, _)));
+        assert_eq!(output[0].meta(), LMeta::single(0));
+        assert_eq!(output[0].value(), "a");
+    }
+
+    #[test]
+    fn should_lex_symbols() {
+        let input = "Symbol symb0l _sym_bol8 _1symboL";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 4);
+        assert!(matches!(output[0], Lexeme::Symbol(_, _)));
+        assert_eq!(output[0].meta(), LMeta::multi(0, 5));
+        assert_eq!(output[0].value(), "Symbol");
+
+        assert!(matches!(output[1], Lexeme::Symbol(_, _)));
+        assert_eq!(output[1].meta(), LMeta::multi(7, 12));
+        assert_eq!(output[1].value(), "symb0l");
+
+        assert!(matches!(output[2], Lexeme::Symbol(_, _)));
+        assert_eq!(output[2].meta(), LMeta::multi(14, 22));
+        assert_eq!(output[2].value(), "_sym_bol8");
+
+        assert!(matches!(output[3], Lexeme::Symbol(_, _)));
+        assert_eq!(output[3].meta(), LMeta::multi(24, 31));
+        assert_eq!(output[3].value(), "_1symboL");
+    }
 }
