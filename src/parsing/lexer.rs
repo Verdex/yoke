@@ -47,7 +47,7 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
     Ok(ret)
 }
 
-fn skip_line(input : &mut impl Iterator<Item = (Option<(usize, char)>, Option<(usize, char)>)>) {
+fn skip_line(input : input!()) {
     loop {
         match input.next() {
             i!(_, (_, c)) if c == '\n' || c == '\r' => { break; },
@@ -57,9 +57,35 @@ fn skip_line(input : &mut impl Iterator<Item = (Option<(usize, char)>, Option<(u
     }
 }
 
-/*fn lex_number(input : &mut CharIndices) -> Result<Lexeme, LexError> {
+fn lex_number(c : char, start : usize, input : input!()) -> Result<Lexeme, LexError> {
+    fn target(x : char) -> bool {
+        x.is_numeric() || x == '+' || x == '-' || x == '.' || x == 'E' || x == 'e'
+    }
 
-}*/
+    let mut end = start;
+
+    let mut ret = vec![c];
+    loop {
+        match input.next() {
+            i!((index, c), (_, x)) if !target(x) => {
+                ret.push(c);
+                end = index;
+                break;
+            },
+            i!((index, c), end) => {
+                ret.push(c);
+                end = index;
+                break;
+            },
+            i!((_, c)) if target(c) => { ret.push(c); },
+            i!(_) => { break; },
+            None => { break; },
+            _ => unreachable!(),
+        }
+    }
+
+    Ok(Lexeme::Number(LMeta::multi(start, end), ret.into_iter().collect::<String>()))
+}
 
 
 /*
@@ -214,5 +240,14 @@ mod test {
 ";
         let output = lex(input).unwrap();
         assert_eq!(output.len(), 0);
+    }
+
+    #[test]
+    fn should_lex_single_digit_and_nothing_else() {
+        let input = "7";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 1);
+        assert_eq!(output[0].meta(), LMeta::single(0));
+        assert_eq!(output[0].value(), "7");
     }
 }
