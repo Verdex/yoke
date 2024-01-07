@@ -109,35 +109,6 @@ fn lex_symbol(c : char, start : usize, input : input!()) -> Result<Lexeme, LexEr
 
 /*
 
-pub (crate) fn parse_word(input : &mut Chars) -> Result<Box<str>, ParseError> {
-    pat!(underscore: char => char = '_' => '_');
-
-    fn parse_alpha(input : &mut Chars) -> Result<char, ParseError> {
-        parser!(input => {
-            init_symbol <= parse_any;
-            where init_symbol.is_alphabetic();
-            select init_symbol
-        })
-    }
-
-    fn parse_init(input : &mut Chars) -> Result<char, ParseError> {
-        alt!(input => parse_alpha; underscore)
-    }
-
-    fn parse_symbol_char(input : &mut Chars) -> Result<char, ParseError> {
-        alt!(input => parse_alpha; parse_digit; underscore)
-    }
-
-    parser!(input => {
-        init <= parse_init;
-        rest <= * parse_symbol_char;
-        select {
-            let mut rest = rest;
-            rest.insert(0, init);
-            rest.into_iter().collect::<String>().into()
-        } 
-    })
-}
 
 pub (crate) fn parse_string(input : &mut Chars) -> Result<Box<str>, ParseError> {
     pat!(parse_n: char => char = 'n' => '\n');
