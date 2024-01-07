@@ -3,7 +3,13 @@
 use crate::data::{Lexeme, LMeta, LexError};
 
 macro_rules! i {
+    ($p:pat, end) => { Some( (Some($p), None) ) };
     ($p1:pat, $p2:pat) => { Some( (Some($p1), Some($p2)) ) };
+    ($p:pat) => { Some( (Some($p), _) ) };
+}
+
+macro_rules! input {
+    () => { &mut impl Iterator<Item = (Option<(usize, char)>, Option<(usize, char)>)> };
 }
 
 pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
