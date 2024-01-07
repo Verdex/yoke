@@ -14,8 +14,7 @@ macro_rules! input {
 
 pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
     let input = input.char_indices().map(|c| Some(c));
-    let initial = input.clone().chain(std::iter::once(None));
-    let mut input = initial.zip(input.skip(1));
+    let mut input = input.clone().zip(input.skip(1).chain(std::iter::once(None)));
 
     let mut comment = 0;
 
