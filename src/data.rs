@@ -104,12 +104,16 @@ impl std::error::Error for ParseError { }
 
 #[derive(Debug)]
 pub enum LexError {
+    EncounteredEndInString,
+    UnexpectedEscapeInString(usize, char),
 }
 
 impl std::fmt::Display for LexError {
     fn fmt(&self, f : &mut std::fmt::Formatter) -> std::fmt::Result {
-        // TODO
-        write!(f, "")
+        match self {
+            LexError::EncounteredEndInString => write!(f, "Encountered end of file while lexing string."),
+            LexError::UnexpectedEscapeInString(index, c) => write!(f, "Encountered unexpected escape in string: {}::{}", index, c),
+        }
     }
 }
 

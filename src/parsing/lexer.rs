@@ -40,8 +40,12 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
                 ret.push(num);
             },
             i!((index, c)) if c.is_alphabetic() || c == '_' => {
-                let num = lex_symbol(c, index, &mut input)?;
-                ret.push(num);
+                let sym = lex_symbol(c, index, &mut input)?;
+                ret.push(sym);
+            },
+            i!((index, '"')) => {
+                let s = lex_string(index, &mut input)?;
+                ret.push(s);
             },
             None => { break; },
             _ => todo!(),
@@ -107,50 +111,26 @@ fn lex_symbol(c : char, start : usize, input : input!()) -> Result<Lexeme, LexEr
     Ok(Lexeme::Symbol(meta, item))
 }
 
-/*
+fn lex_string(start : usize, input : input!()) -> Result<Lexeme, LexError> {
+    let mut end = start;
 
-
-pub (crate) fn parse_string(input : &mut Chars) -> Result<Box<str>, ParseError> {
-    pat!(parse_n: char => char = 'n' => '\n');
-    pat!(parse_r: char => char = 'r' => '\r');
-    pat!(parse_t: char => char = 't' => '\t');
-    pat!(parse_slash: char => char = '\\' => '\\');
-    pat!(parse_zero: char => char = '0' => '\0');
-    pat!(parse_quote: char => char = '"' => '"');
-
-    fn parse_code(input : &mut Chars) -> Result<char, ParseError> {
-        alt!(input => parse_n; parse_r; parse_t; parse_slash; parse_zero; parse_quote)
+    let mut ret = vec![];
+    loop {
+        match input.next() {
+            i!((index, '"')) => { end = index; break; },
+            i!((_, '\\'), (_, 't')) => { ret.push('\t'); input.next(); },
+            i!((_, '\\'), (_, 'n')) => { ret.push('\n'); input.next(); },
+            i!((_, '\\'), (_, 'r')) => { ret.push('\r'); input.next(); },
+            i!((_, '\\'), (_, '0')) => { ret.push('\0'); input.next(); },
+            i!((_, '\\'), (_, '\\')) => { ret.push('\\'); input.next(); },
+            i!((_, '\\'), (index, c)) => { return Err(LexError::UnexpectedEscapeInString(index, c)); },
+            i!((_, c)) => { ret.push(c); },
+            None => { return Err(LexError::EncounteredEndInString); },
+            _ => unreachable!(),
+        }
     }
-
-    fn parse_escape(input : &mut Chars) -> Result<char, ParseError> {
-        parser!(input => {
-            _slash <= parse_slash;
-            code <= ! parse_code;
-            select code
-        })
-    }
-
-    fn parse_any_but_quote(input : &mut Chars) -> Result<char, ParseError> {
-        parser!(input => {
-            any <= parse_any;
-            where any != '"';
-            select any
-        })
-    }
-
-    fn parse_str_char(input : &mut Chars) -> Result<char, ParseError> {
-        alt!(input => parse_escape; parse_any_but_quote)
-    }
-
-    parser!(input => {
-        _start_quote <= parse_quote;
-        str_chars <= * parse_str_char;
-        _end_quote <= parse_quote;
-        select str_chars.into_iter().collect::<String>().into()
-    })
+    Ok(Lexeme::String(LMeta::multi(start, end), ret.into_iter().collect::<String>()))
 }
-
-*/
 
 #[cfg(test)]
 mod test {
