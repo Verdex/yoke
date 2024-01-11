@@ -101,12 +101,12 @@ fn lex_item(c : char, start : usize, target : fn(char) -> bool, input : input!()
     let mut ret = vec![c];
     loop {
         match input.next() {
-            i!((index, c), (_, x)) if !target(x) => {
+            i!((index, c), (_, x)) if target(c) && !target(x) => {
                 ret.push(c);
                 end = index;
                 break;
             },
-            i!((index, c), end) => {
+            i!((index, c), end) => if target(c) {
                 ret.push(c);
                 end = index;
                 break;
