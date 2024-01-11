@@ -1,10 +1,6 @@
 
-use crate::data::Ast;
-use crate::data::ParseError;
+use crate::data::{ Lexeme, Ast, ParseError };
 
-// TODO: Delete
-fn x<T>() -> Result<T, ParseError> { unreachable!() }
-
-fn parse(input : &str) -> Result<Ast, ParseError> {
-    x()
+fn parse(input : Vec<Lexeme>) -> Result<Ast, ParseError> {
+    todo!()
 }
