@@ -47,6 +47,7 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
                 let s = lex_string(index, &mut input)?;
                 ret.push(s);
             },
+            i!((index, c)) => { return Err(LexError::UnexpectedToken(index, c)); },
             None => { break; },
             _ => todo!(),
         }
