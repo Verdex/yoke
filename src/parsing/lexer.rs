@@ -47,9 +47,36 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
                 let s = lex_string(index, &mut input)?;
                 ret.push(s);
             },
+
+            i!((index, ')')) => { ret.push(Lexeme::RParen(LMeta::single(index))); },
+            i!((index, '(')) => { ret.push(Lexeme::LParen(LMeta::single(index))); },
+            
+            i!((index, '>')) => { ret.push(Lexeme::RAngle(LMeta::single(index))); },
+            i!((index, '<')) => { ret.push(Lexeme::LAngle(LMeta::single(index))); },
+
+            i!((index, '}')) => { ret.push(Lexeme::RCurl(LMeta::single(index))); },
+            i!((index, '{')) => { ret.push(Lexeme::LCurl(LMeta::single(index))); },
+
+            i!((index, ']')) => { ret.push(Lexeme::RSquare(LMeta::single(index))); },
+            i!((index, '[')) => { ret.push(Lexeme::LSquare(LMeta::single(index))); },
+
+            i!((index, '.')) => { ret.push(Lexeme::Dot(LMeta::single(index))); },
+            i!((index, ',')) => { ret.push(Lexeme::Comma(LMeta::single(index))); },
+            i!((index, ';')) => { ret.push(Lexeme::SemiColon(LMeta::single(index))); },
+            i!((start, '='), (end, '>')) => { 
+                ret.push(Lexeme::RDoubleArrow(LMeta::multi(start, end)));
+                input.next();
+            },
+            i!((index, '=')) => { ret.push(Lexeme::Equal(LMeta::single(index))); },
+            i!((index, '$')) => { ret.push(Lexeme::Dollar(LMeta::single(index))); },
+            i!((index, '^')) => { ret.push(Lexeme::Caret(LMeta::single(index))); },
+            i!((start, '-'), (end, '>')) => { 
+                ret.push(Lexeme::RArrow(LMeta::multi(start, end)));
+                input.next();
+            },
             i!((index, c)) => { return Err(LexError::UnexpectedToken(index, c)); },
             None => { break; },
-            _ => todo!(),
+            _ => unreachable!(),
         }
     }
 
