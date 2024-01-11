@@ -94,7 +94,24 @@ impl Lexeme {
 
 #[derive(Debug)]
 pub enum Ast {
+    Paren(LMeta, Vec<Ast>),
+    Angle(LMeta, Vec<Ast>),
+    Curl(LMeta, Vec<Ast>),
+    Square(LMeta, Vec<Ast>),
+    Lex(Lexeme),
+}
 
+impl Ast {
+    pub fn meta(&self) -> LMeta {
+        use Ast::*;
+        match self {
+            Paren(m, _) => m.clone(),
+            Angle(m, _) => m.clone(),
+            Curl(m, _) => m.clone(),
+            Square(m, _) => m.clone(),
+            Lex(l) => l.meta(),
+        }
+    }
 }
 
 #[derive(Debug)]
