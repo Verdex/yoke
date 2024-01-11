@@ -51,6 +51,7 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
             i!((index, '.')) => { ret.push(Lexeme::Dot(LMeta::single(index))); },
             i!((index, ',')) => { ret.push(Lexeme::Comma(LMeta::single(index))); },
             i!((index, ';')) => { ret.push(Lexeme::SemiColon(LMeta::single(index))); },
+            i!((index, ':')) => { ret.push(Lexeme::Colon(LMeta::single(index))); },
             i!((start, '='), (end, '>')) => { 
                 ret.push(Lexeme::RDoubleArrow(LMeta::multi(start, end)));
                 input.next();
