@@ -287,4 +287,28 @@ mod test {
         assert_eq!(output[3].meta(), LMeta::multi(24, 31));
         assert_eq!(output[3].value(), "_1symboL");
     }
+
+    #[test]
+    fn should_lex_punctuation() {
+        let input = " => -> () <> {} [] . , ; : = $ ^";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 17);
+        assert!(matches!(output[0], Lexeme::RDoubleArrow(_)));
+        assert!(matches!(output[1], Lexeme::RArrow(_)));
+        assert!(matches!(output[2], Lexeme::LParen(_)));
+        assert!(matches!(output[3], Lexeme::RParen(_)));
+        assert!(matches!(output[4], Lexeme::LAngle(_)));
+        assert!(matches!(output[5], Lexeme::RAngle(_)));
+        assert!(matches!(output[6], Lexeme::LCurl(_)));
+        assert!(matches!(output[7], Lexeme::RCurl(_)));
+        assert!(matches!(output[8], Lexeme::LSquare(_)));
+        assert!(matches!(output[9], Lexeme::RSquare(_)));
+        assert!(matches!(output[10], Lexeme::Dot(_)));
+        assert!(matches!(output[11], Lexeme::Comma(_)));
+        assert!(matches!(output[12], Lexeme::SemiColon(_)));
+        assert!(matches!(output[13], Lexeme::Colon(_)));
+        assert!(matches!(output[14], Lexeme::Equal(_)));
+        assert!(matches!(output[15], Lexeme::Dollar(_)));
+        assert!(matches!(output[16], Lexeme::Caret(_)));
+    }
 }
