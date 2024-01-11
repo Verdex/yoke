@@ -153,6 +153,7 @@ fn lex_string(start : usize, input : input!()) -> Result<Lexeme, LexError> {
             i!((_, '\\'), (_, 'r')) => { ret.push('\r'); input.next(); },
             i!((_, '\\'), (_, '0')) => { ret.push('\0'); input.next(); },
             i!((_, '\\'), (_, '\\')) => { ret.push('\\'); input.next(); },
+            i!((_, '\\'), (_, '"')) => { ret.push('"'); input.next(); },
             i!((_, '\\'), (index, c)) => { return Err(LexError::UnexpectedEscapeInString(index, c)); },
             i!((_, c)) => { ret.push(c); },
             None => { return Err(LexError::EncounteredEndInString); },
@@ -286,6 +287,16 @@ mod test {
         assert!(matches!(output[3], Lexeme::Symbol(_, _)));
         assert_eq!(output[3].meta(), LMeta::multi(24, 31));
         assert_eq!(output[3].value(), "_1symboL");
+    }
+
+    #[test]
+    fn should_lex_string() {
+        let input = " \"string \\t \\n \\r \\0 \\\\ \\\" \"";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 1);
+        assert!(matches!(output[0], Lexeme::String(_, _)));
+        assert_eq!(output[0].meta(), LMeta::multi(1, 27));
+        assert_eq!(output[0].value(), "string \t \n \r \0 \\ \" ");
     }
 
     #[test]
