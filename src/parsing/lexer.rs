@@ -35,18 +35,6 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
             i!((_, c)) if c.is_whitespace() => { },
             i!((_, '/'), (_, '*')) => { comment += 1; input.next(); },
             i!((_, '/'), (_, '/')) => { skip_line(&mut input); },
-            i!((index, c)) if c.is_numeric() || c == '+' || c == '-' => {
-                let num = lex_number(c, index, &mut input)?;
-                ret.push(num);
-            },
-            i!((index, c)) if c.is_alphabetic() || c == '_' => {
-                let sym = lex_symbol(c, index, &mut input)?;
-                ret.push(sym);
-            },
-            i!((index, '"')) => {
-                let s = lex_string(index, &mut input)?;
-                ret.push(s);
-            },
 
             i!((index, ')')) => { ret.push(Lexeme::RParen(LMeta::single(index))); },
             i!((index, '(')) => { ret.push(Lexeme::LParen(LMeta::single(index))); },
@@ -73,6 +61,19 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
             i!((start, '-'), (end, '>')) => { 
                 ret.push(Lexeme::RArrow(LMeta::multi(start, end)));
                 input.next();
+            },
+
+            i!((index, c)) if c.is_numeric() || c == '+' || c == '-' => {
+                let num = lex_number(c, index, &mut input)?;
+                ret.push(num);
+            },
+            i!((index, c)) if c.is_alphabetic() || c == '_' => {
+                let sym = lex_symbol(c, index, &mut input)?;
+                ret.push(sym);
+            },
+            i!((index, '"')) => {
+                let s = lex_string(index, &mut input)?;
+                ret.push(s);
             },
             i!((index, c)) => { return Err(LexError::UnexpectedToken(index, c)); },
             None => { break; },
