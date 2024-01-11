@@ -141,7 +141,7 @@ fn lex_symbol(c : char, start : usize, input : input!()) -> Result<Lexeme, LexEr
 }
 
 fn lex_string(start : usize, input : input!()) -> Result<Lexeme, LexError> {
-    let mut end = start;
+    let end;
 
     let mut ret = vec![];
     loop {
