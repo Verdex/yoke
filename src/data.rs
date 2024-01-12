@@ -2,8 +2,8 @@
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LMeta {
-    start : usize,   
-    end : usize,
+    pub start : usize,   
+    pub end : usize,
 }
 
 impl LMeta {
