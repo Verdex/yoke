@@ -116,13 +116,22 @@ impl Ast {
 
 #[derive(Debug)]
 pub enum ParseError {
-
+    MissingEndBracket { initial: usize, terminal : usize, found : char, expected : char},
+    EofInsteadOfEndBracket { initial: usize, expected : char },
+    NotAllInputConsumed(usize),
 }
 
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f : &mut std::fmt::Formatter) -> std::fmt::Result {
-        // TODO
-        write!(f, "")
+        match self {
+            ParseError::MissingEndBracket { initial, terminal, found, expected } => 
+                write!(f, "Encountered incorrect bracket at {}.  Expected {}, but found {} matching {}", 
+                    terminal, expected, found, initial),
+            ParseError::EofInsteadOfEndBracket { initial, expected } => 
+                write!(f, "Encountered end of file instead of bracket.  Expected {}, but found end of file matching {}",
+                    expected, initial),
+            ParseError::NotAllInputConsumed(index) => write!(f, "Not all input consumed during parsing: {}", index),
+        }
     }
 }
 
