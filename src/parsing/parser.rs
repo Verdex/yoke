@@ -10,6 +10,11 @@ enum Type {
 
 pub fn parse(input : Vec<Lexeme>) -> Result<Vec<Ast>, ParseError> {
     let mut input = input.into_iter();
+    parse_ast(&mut input)
+}
+
+fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<Vec<Ast>, ParseError> {
+    let mut input = input.into_iter();
 
     let mut ret = vec![];
     loop {
@@ -38,11 +43,6 @@ pub fn parse(input : Vec<Lexeme>) -> Result<Vec<Ast>, ParseError> {
     Ok(ret)
 }
 
-
 fn parse_bracket(t : Type, input : &mut impl Iterator<Item = Lexeme>) -> Result<Ast, ParseError> {
-
     todo!()
 }
-
-// TODO 
-// * parse all brackets with stuff inside
