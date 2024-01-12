@@ -73,3 +73,18 @@ fn parse_bracket(t : Type, initial : usize, input : &mut impl Iterator<Item = Le
         (t, None) => Err(ParseError::EofInsteadOfEndBracket { initial, expected: to_expected(t) }),
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use super::super::lexer::lex;
+
+    #[test]
+    fn should_parse_paren() {
+        let input = "( 1 2 3 )";
+        let tokens = lex(input).unwrap();
+        let ast = parse(tokens).unwrap();
+        assert_eq!(ast.len(), 1);
+        assert!(matches!(ast[0], Ast::Paren(_, _)));
+    }
+}
