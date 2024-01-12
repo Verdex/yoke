@@ -87,4 +87,31 @@ mod test {
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Ast::Paren(_, _)));
     }
+
+    #[test]
+    fn should_parse_angle() {
+        let input = "< 1 2 3 >";
+        let tokens = lex(input).unwrap();
+        let ast = parse(tokens).unwrap();
+        assert_eq!(ast.len(), 1);
+        assert!(matches!(ast[0], Ast::Angle(_, _)));
+    }
+
+    #[test]
+    fn should_parse_curl() {
+        let input = "{ 1 2 3 }";
+        let tokens = lex(input).unwrap();
+        let ast = parse(tokens).unwrap();
+        assert_eq!(ast.len(), 1);
+        assert!(matches!(ast[0], Ast::Curl(_, _)));
+    }
+
+    #[test]
+    fn should_parse_square() {
+        let input = "[ 1 2 3 ]";
+        let tokens = lex(input).unwrap();
+        let ast = parse(tokens).unwrap();
+        assert_eq!(ast.len(), 1);
+        assert!(matches!(ast[0], Ast::Square(_, _)));
+    }
 }
