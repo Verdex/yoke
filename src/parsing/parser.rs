@@ -114,4 +114,20 @@ mod test {
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Ast::Square(_, _)));
     }
+
+    #[test]
+    fn should_parse_paren_in_paren() {
+        let input = "( 1 ( 2 3 ) )";
+        let tokens = lex(input).unwrap();
+        let ast = parse(tokens).unwrap();
+        assert_eq!(ast.len(), 1);
+        assert!(matches!(ast[0], Ast::Paren(_, _)));
+        let items = match &ast[0] {
+            Ast::Paren(_, items) => items,
+            _ => unreachable!(),
+        };
+        assert_eq!(items.len(), 2);
+        assert!(matches!(items[0], Ast::Lex(Lexeme::Number(_, _))));
+        assert!(matches!(items[1], Ast::Paren(_, _)));
+    }
 }
