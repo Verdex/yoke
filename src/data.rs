@@ -27,6 +27,7 @@ pub enum Lexeme {
     LSquare(LMeta),
 
     Punct(LMeta, char),
+    Group(LMeta, Vec<Lexeme>),
 
     String(LMeta, String),
     Number(LMeta, String),
@@ -46,26 +47,27 @@ impl Lexeme {
             RSquare(m) => m.clone(),
             LSquare(m) => m.clone(),
             Punct(m, _) => m.clone(),
+            Group(m, _) => m.clone(),
             String(m, _) => m.clone(),
             Number(m, _) => m.clone(),
             Symbol(m, _) => m.clone(),
         }
     }
     pub fn value(&self) -> String {
-        use Lexeme::*;
         match self {
-            RParen(_) => ")".into(),
-            LParen(_) => "(".into(),
-            RAngle(_) => ">".into(),
-            LAngle(_) => "<".into(),
-            RCurl(_) => "}".into(),
-            LCurl(_) => "{".into(),
-            RSquare(_) => "]".into(),
-            LSquare(_) => "[".into(),
-            Punct(_, c) => c.to_string(),
-            String(_, s) => s.clone(),
-            Number(_, n) => n.clone(),
-            Symbol(_, sym) => sym.clone(),
+            Lexeme::RParen(_) => ")".into(),
+            Lexeme::LParen(_) => "(".into(),
+            Lexeme::RAngle(_) => ">".into(),
+            Lexeme::LAngle(_) => "<".into(),
+            Lexeme::RCurl(_) => "}".into(),
+            Lexeme::LCurl(_) => "{".into(),
+            Lexeme:: RSquare(_) => "]".into(),
+            Lexeme::LSquare(_) => "[".into(),
+            Lexeme::Punct(_, c) => c.to_string(),
+            Lexeme::Group(_, g) => g.iter().map(|x| x.value()).collect::<String>(),
+            Lexeme::String(_, s) => s.clone(),
+            Lexeme::Number(_, n) => n.clone(),
+            Lexeme::Symbol(_, sym) => sym.clone(),
         }
     }
 }
