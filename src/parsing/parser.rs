@@ -1,5 +1,5 @@
 
-use crate::data::{ Lexeme, Ast, ParseError, LMeta };
+use crate::data::{ Lexeme, Bracket, ParseError, LMeta };
 
 enum Type {
     Paren,
@@ -8,7 +8,7 @@ enum Type {
     Square,
 }
 
-pub fn parse(input : Vec<Lexeme>) -> Result<Vec<Ast>, ParseError> {
+pub fn parse(input : Vec<Lexeme>) -> Result<Vec<Bracket>, ParseError> {
     let mut input = input.into_iter();
     match parse_ast(&mut input)? {
         (None, ast) => Ok(ast),
@@ -16,7 +16,7 @@ pub fn parse(input : Vec<Lexeme>) -> Result<Vec<Ast>, ParseError> {
     }
 }
 
-fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<(Option<Lexeme>, Vec<Ast>), ParseError> {
+fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<(Option<Lexeme>, Vec<Bracket>), ParseError> {
 
     let mut ret = vec![];
     let end = loop {
@@ -41,7 +41,7 @@ fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<(Option<Lexeme
             Some(x @ Lexeme::RAngle(_)) => { break Some(x); },
             Some(x @ Lexeme::RCurl(_)) => { break Some(x); },
             Some(x @ Lexeme::RSquare(_)) => { break Some(x); },
-            Some(l) => { ret.push(Ast::Lex(l)); },
+            Some(l) => { ret.push(Bracket::Lex(l)); },
             None => { break None; },
         }
     };
@@ -49,7 +49,7 @@ fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<(Option<Lexeme
     Ok((end, ret))
 }
 
-fn parse_bracket(t : Type, initial : usize, input : &mut impl Iterator<Item = Lexeme>) -> Result<Ast, ParseError> {
+fn parse_bracket(t : Type, initial : usize, input : &mut impl Iterator<Item = Lexeme>) -> Result<Bracket, ParseError> {
     fn to_expected(t : Type) -> char {
         match t {
             Type::Paren => ')',
@@ -61,10 +61,10 @@ fn parse_bracket(t : Type, initial : usize, input : &mut impl Iterator<Item = Le
 
     let (end, contents) = parse_ast(input)?;
     match (t, end) {
-        (Type::Paren, Some(Lexeme::RParen(m))) => Ok(Ast::Paren(LMeta::multi(initial, m.end), contents)),
-        (Type::Angle, Some(Lexeme::RAngle(m))) => Ok(Ast::Angle(LMeta::multi(initial, m.end), contents)),
-        (Type::Curl, Some(Lexeme::RCurl(m))) => Ok(Ast::Curl(LMeta::multi(initial, m.end), contents)),
-        (Type::Square, Some(Lexeme::RSquare(m))) => Ok(Ast::Square(LMeta::multi(initial, m.end), contents)),
+        (Type::Paren, Some(Lexeme::RParen(m))) => Ok(Bracket::Paren(LMeta::multi(initial, m.end), contents)),
+        (Type::Angle, Some(Lexeme::RAngle(m))) => Ok(Bracket::Angle(LMeta::multi(initial, m.end), contents)),
+        (Type::Curl, Some(Lexeme::RCurl(m))) => Ok(Bracket::Curl(LMeta::multi(initial, m.end), contents)),
+        (Type::Square, Some(Lexeme::RSquare(m))) => Ok(Bracket::Square(LMeta::multi(initial, m.end), contents)),
         (t, Some(l)) => {
             let found = l.value().chars().nth(0).unwrap();
             let terminal = l.meta().start;
@@ -85,7 +85,7 @@ mod test {
         let tokens = lex(input).unwrap();
         let ast = parse(tokens).unwrap();
         assert_eq!(ast.len(), 1);
-        assert!(matches!(ast[0], Ast::Paren(_, _)));
+        assert!(matches!(ast[0], Bracket::Paren(_, _)));
     }
 
     #[test]
@@ -94,7 +94,7 @@ mod test {
         let tokens = lex(input).unwrap();
         let ast = parse(tokens).unwrap();
         assert_eq!(ast.len(), 1);
-        assert!(matches!(ast[0], Ast::Angle(_, _)));
+        assert!(matches!(ast[0], Bracket::Angle(_, _)));
     }
 
     #[test]
@@ -103,7 +103,7 @@ mod test {
         let tokens = lex(input).unwrap();
         let ast = parse(tokens).unwrap();
         assert_eq!(ast.len(), 1);
-        assert!(matches!(ast[0], Ast::Curl(_, _)));
+        assert!(matches!(ast[0], Bracket::Curl(_, _)));
     }
 
     #[test]
@@ -112,7 +112,7 @@ mod test {
         let tokens = lex(input).unwrap();
         let ast = parse(tokens).unwrap();
         assert_eq!(ast.len(), 1);
-        assert!(matches!(ast[0], Ast::Square(_, _)));
+        assert!(matches!(ast[0], Bracket::Square(_, _)));
     }
 
     #[test]
@@ -121,13 +121,13 @@ mod test {
         let tokens = lex(input).unwrap();
         let ast = parse(tokens).unwrap();
         assert_eq!(ast.len(), 1);
-        assert!(matches!(ast[0], Ast::Paren(_, _)));
+        assert!(matches!(ast[0], Bracket::Paren(_, _)));
         let items = match &ast[0] {
-            Ast::Paren(_, items) => items,
+            Bracket::Paren(_, items) => items,
             _ => unreachable!(),
         };
         assert_eq!(items.len(), 2);
-        assert!(matches!(items[0], Ast::Lex(Lexeme::Number(_, _))));
-        assert!(matches!(items[1], Ast::Paren(_, _)));
+        assert!(matches!(items[0], Bracket::Lex(Lexeme::Number(_, _))));
+        assert!(matches!(items[1], Bracket::Paren(_, _)));
     }
 }

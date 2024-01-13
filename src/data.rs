@@ -93,17 +93,17 @@ impl Lexeme {
 }
 
 #[derive(Debug)]
-pub enum Ast {
-    Paren(LMeta, Vec<Ast>),
-    Angle(LMeta, Vec<Ast>),
-    Curl(LMeta, Vec<Ast>),
-    Square(LMeta, Vec<Ast>),
+pub enum Bracket {
+    Paren(LMeta, Vec<Bracket>),
+    Angle(LMeta, Vec<Bracket>),
+    Curl(LMeta, Vec<Bracket>),
+    Square(LMeta, Vec<Bracket>),
     Lex(Lexeme),
 }
 
-impl Ast {
+impl Bracket {
     pub fn meta(&self) -> LMeta {
-        use Ast::*;
+        use Bracket::*;
         match self {
             Paren(m, _) => m.clone(),
             Angle(m, _) => m.clone(),
