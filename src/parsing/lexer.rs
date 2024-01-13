@@ -57,22 +57,6 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
             i!((index, ']')) => { ret.push(Lexeme::RSquare(LMeta::single(index))); },
             i!((index, '[')) => { ret.push(Lexeme::LSquare(LMeta::single(index))); },
 
-            i!((index, '.')) => { ret.push(Lexeme::Dot(LMeta::single(index))); },
-            i!((index, ',')) => { ret.push(Lexeme::Comma(LMeta::single(index))); },
-            i!((index, ';')) => { ret.push(Lexeme::SemiColon(LMeta::single(index))); },
-            i!((index, ':')) => { ret.push(Lexeme::Colon(LMeta::single(index))); },
-            i!((start, '='), (end, '>')) => { 
-                ret.push(Lexeme::RDoubleArrow(LMeta::multi(start, end)));
-                input.next();
-            },
-            i!((index, '=')) => { ret.push(Lexeme::Equal(LMeta::single(index))); },
-            i!((index, '$')) => { ret.push(Lexeme::Dollar(LMeta::single(index))); },
-            i!((index, '^')) => { ret.push(Lexeme::Caret(LMeta::single(index))); },
-            i!((start, '-'), (end, '>')) => { 
-                ret.push(Lexeme::RArrow(LMeta::multi(start, end)));
-                input.next();
-            },
-
             i!((index, c), (_, other)) if num_char(c) && num_char(other) => {
                 let num = lex_number(c, index, &mut input)?;
                 ret.push(num);
@@ -95,7 +79,7 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
                 let s = lex_string(index, &mut input)?;
                 ret.push(s);
             },
-            i!((index, c)) => { return Err(LexError::UnexpectedToken(index, c)); },
+            i!((index, c)) => { ret.push(Lexeme::Punct(LMeta::single(index), c)); },
             None => { break; },
             _ => unreachable!(),
         }
@@ -272,7 +256,7 @@ mod test {
         let output = lex(input).unwrap();
         assert_eq!(output.len(), 2);
         assert!(matches!(output[0], Lexeme::Number(_, _)));
-        assert!(matches!(output[1], Lexeme::Comma(_)));
+        assert!(matches!(output[1], Lexeme::Punct(_, ',')));
     }
 
     #[test]
@@ -281,7 +265,7 @@ mod test {
         let output = lex(input).unwrap();
         assert_eq!(output.len(), 2);
         assert!(matches!(output[0], Lexeme::Symbol(_, _)));
-        assert!(matches!(output[1], Lexeme::Comma(_)));
+        assert!(matches!(output[1], Lexeme::Punct(_, ',')));
     }
 
     #[test]
@@ -328,11 +312,11 @@ mod test {
 
     #[test]
     fn should_lex_punctuation() {
-        let input = " => -> () <> {} [] . , ; : = $ ^";
+        let input = " = - () <> {} [] . , ; : = $ ^";
         let output = lex(input).unwrap();
         assert_eq!(output.len(), 17);
-        assert!(matches!(output[0], Lexeme::RDoubleArrow(_)));
-        assert!(matches!(output[1], Lexeme::RArrow(_)));
+        assert!(matches!(output[0], Lexeme::Punct(_, '=')));
+        assert!(matches!(output[1], Lexeme::Punct(_, '-')));
         assert!(matches!(output[2], Lexeme::LParen(_)));
         assert!(matches!(output[3], Lexeme::RParen(_)));
         assert!(matches!(output[4], Lexeme::LAngle(_)));
@@ -341,12 +325,12 @@ mod test {
         assert!(matches!(output[7], Lexeme::RCurl(_)));
         assert!(matches!(output[8], Lexeme::LSquare(_)));
         assert!(matches!(output[9], Lexeme::RSquare(_)));
-        assert!(matches!(output[10], Lexeme::Dot(_)));
-        assert!(matches!(output[11], Lexeme::Comma(_)));
-        assert!(matches!(output[12], Lexeme::SemiColon(_)));
-        assert!(matches!(output[13], Lexeme::Colon(_)));
-        assert!(matches!(output[14], Lexeme::Equal(_)));
-        assert!(matches!(output[15], Lexeme::Dollar(_)));
-        assert!(matches!(output[16], Lexeme::Caret(_)));
+        assert!(matches!(output[10], Lexeme::Punct(_, '.')));
+        assert!(matches!(output[11], Lexeme::Punct(_, ',')));
+        assert!(matches!(output[12], Lexeme::Punct(_, ';')));
+        assert!(matches!(output[13], Lexeme::Punct(_, ':')));
+        assert!(matches!(output[14], Lexeme::Punct(_, '=')));
+        assert!(matches!(output[15], Lexeme::Punct(_, '$')));
+        assert!(matches!(output[16], Lexeme::Punct(_, '^')));
     }
 }

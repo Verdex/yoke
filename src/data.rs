@@ -25,15 +25,9 @@ pub enum Lexeme {
     LCurl(LMeta),
     RSquare(LMeta),
     LSquare(LMeta),
-    Dot(LMeta),
-    Comma(LMeta),
-    SemiColon(LMeta),
-    Colon(LMeta),
-    Equal(LMeta),
-    Dollar(LMeta),
-    Caret(LMeta),
-    RArrow(LMeta),
-    RDoubleArrow(LMeta),
+
+    Punct(LMeta, char),
+
     String(LMeta, String),
     Number(LMeta, String),
     Symbol(LMeta, String),
@@ -51,15 +45,7 @@ impl Lexeme {
             LCurl(m) => m.clone(),
             RSquare(m) => m.clone(),
             LSquare(m) => m.clone(),
-            Dot(m) => m.clone(),
-            Comma(m) => m.clone(),
-            SemiColon(m) => m.clone(),
-            Colon(m) => m.clone(),
-            Equal(m) => m.clone(),
-            Dollar(m) => m.clone(),
-            Caret(m) => m.clone(),
-            RArrow(m) => m.clone(),
-            RDoubleArrow(m) => m.clone(),
+            Punct(m, _) => m.clone(),
             String(m, _) => m.clone(),
             Number(m, _) => m.clone(),
             Symbol(m, _) => m.clone(),
@@ -76,15 +62,7 @@ impl Lexeme {
             LCurl(_) => "{".into(),
             RSquare(_) => "]".into(),
             LSquare(_) => "[".into(),
-            Dot(_) => ".".into(),
-            Comma(_) => ",".into(),
-            SemiColon(_) => ";".into(),
-            Colon(_) => ":".into(),
-            Equal(_) => "=".into(),
-            Dollar(_) => "$".into(),
-            Caret(_) => "^".into(),
-            RArrow(_) => "->".into(),
-            RDoubleArrow(_) => "=>".into(),
+            Punct(_, c) => c.to_string(),
             String(_, s) => s.clone(),
             Number(_, n) => n.clone(),
             Symbol(_, sym) => sym.clone(),
@@ -141,7 +119,6 @@ impl std::error::Error for ParseError { }
 pub enum LexError {
     EncounteredEndInString,
     UnexpectedEscapeInString(usize, char),
-    UnexpectedToken(usize, char),
 }
 
 impl std::fmt::Display for LexError {
@@ -149,7 +126,6 @@ impl std::fmt::Display for LexError {
         match self {
             LexError::EncounteredEndInString => write!(f, "Encountered end of file while lexing string."),
             LexError::UnexpectedEscapeInString(index, c) => write!(f, "Encountered unexpected escape in string: {}::{}", index, c),
-            LexError::UnexpectedToken(index, c) => write!(f, "Encountered unexpected token {} at {}", c, index),
         }
     }
 }
