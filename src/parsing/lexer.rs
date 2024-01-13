@@ -13,12 +13,11 @@ macro_rules! input {
 }
 
 fn symbol_start(c : char) -> bool { c.is_alphabetic() || c == '_' }
-fn num_start(c : char) -> bool { c.is_numeric() || c == '+' || c == '-' }
 fn symbol_char(x : char) -> bool {
     x.is_alphanumeric() || x == '_' 
 }
 fn num_char(x : char) -> bool {
-    x.is_numeric() || x == '+' || x == '-' || x == '.' || x == 'E' || x == 'e'
+    x.is_numeric() 
 }
 
 pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
@@ -74,11 +73,11 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
                 input.next();
             },
 
-            i!((index, c), (_, other)) if num_start(c) && num_char(other) => {
+            i!((index, c), (_, other)) if num_char(c) && num_char(other) => {
                 let num = lex_number(c, index, &mut input)?;
                 ret.push(num);
             },
-            i!((index, c)) if num_start(c) => {
+            i!((index, c)) if num_char(c) => {
                 let num = Lexeme::Number(LMeta::single(index), c.to_string());
                 ret.push(num);
             },
@@ -247,24 +246,24 @@ mod test {
 
     #[test]
     fn should_lex_numbers() {
-        let input = "1234.5678E+90 +1234 -1234 +123e-456";
+        let input = "1234 5678 1 2";
         let output = lex(input).unwrap();
         assert_eq!(output.len(), 4);
         assert!(matches!(output[0], Lexeme::Number(_, _)));
-        assert_eq!(output[0].meta(), LMeta::multi(0, 12));
-        assert_eq!(output[0].value(), "1234.5678E+90");
+        assert_eq!(output[0].meta(), LMeta::multi(0, 3));
+        assert_eq!(output[0].value(), "1234");
 
         assert!(matches!(output[1], Lexeme::Number(_, _)));
-        assert_eq!(output[1].meta(), LMeta::multi(14, 18));
-        assert_eq!(output[1].value(), "+1234");
+        assert_eq!(output[1].meta(), LMeta::multi(5, 8));
+        assert_eq!(output[1].value(), "5678");
 
         assert!(matches!(output[2], Lexeme::Number(_, _)));
-        assert_eq!(output[2].meta(), LMeta::multi(20, 24));
-        assert_eq!(output[2].value(), "-1234");
+        assert_eq!(output[2].meta(), LMeta::multi(10, 10));
+        assert_eq!(output[2].value(), "1");
 
         assert!(matches!(output[3], Lexeme::Number(_, _)));
-        assert_eq!(output[3].meta(), LMeta::multi(26, 34));
-        assert_eq!(output[3].value(), "+123e-456");
+        assert_eq!(output[3].meta(), LMeta::multi(12, 12));
+        assert_eq!(output[3].value(), "2");
     }
 
     #[test]
