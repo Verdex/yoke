@@ -27,7 +27,7 @@ pub enum Lexeme {
     LSquare(LMeta),
 
     Punct(LMeta, char),
-    Group(LMeta, Vec<Lexeme>),
+    Group(LMeta, String, Vec<Lexeme>),
 
     String(LMeta, String),
     Number(LMeta, String),
@@ -47,7 +47,7 @@ impl Lexeme {
             RSquare(m) => m.clone(),
             LSquare(m) => m.clone(),
             Punct(m, _) => m.clone(),
-            Group(m, _) => m.clone(),
+            Group(m, _, _) => m.clone(),
             String(m, _) => m.clone(),
             Number(m, _) => m.clone(),
             Symbol(m, _) => m.clone(),
@@ -64,7 +64,7 @@ impl Lexeme {
             Lexeme:: RSquare(_) => "]".into(),
             Lexeme::LSquare(_) => "[".into(),
             Lexeme::Punct(_, c) => c.to_string(),
-            Lexeme::Group(_, g) => g.iter().map(|x| x.value()).collect::<String>(),
+            Lexeme::Group(_, _, g) => g.iter().map(|x| x.value()).collect::<String>(),
             Lexeme::String(_, s) => s.clone(),
             Lexeme::Number(_, n) => n.clone(),
             Lexeme::Symbol(_, sym) => sym.clone(),
