@@ -12,7 +12,17 @@ macro_rules! input {
     () => { &mut impl Iterator<Item = (Option<(usize, char)>, Option<(usize, char)>)> };
 }
 
+fn symbol_start(c : char) -> bool { c.is_alphabetic() || c == '_' }
+fn num_start(c : char) -> bool { c.is_numeric() || c == '+' || c == '-' }
+fn symbol_char(x : char) -> bool {
+    x.is_alphanumeric() || x == '_' 
+}
+fn num_char(x : char) -> bool {
+    x.is_numeric() || x == '+' || x == '-' || x == '.' || x == 'E' || x == 'e'
+}
+
 pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
+
     let input = input.char_indices().map(|c| Some(c));
     let mut input = input.clone().zip(input.skip(1).chain(std::iter::once(None)));
 
@@ -64,14 +74,24 @@ pub fn lex(input : &str) -> Result<Vec<Lexeme>, LexError> {
                 input.next();
             },
 
-            i!((index, c)) if c.is_numeric() || c == '+' || c == '-' => {
+            i!((index, c), (_, other)) if num_start(c) && num_char(other) => {
                 let num = lex_number(c, index, &mut input)?;
                 ret.push(num);
             },
-            i!((index, c)) if c.is_alphabetic() || c == '_' => {
+            i!((index, c)) if num_start(c) => {
+                let num = Lexeme::Number(LMeta::single(index), c.to_string());
+                ret.push(num);
+            },
+
+            i!((index, c), (_, other)) if symbol_start(c) && symbol_char(other) => {
                 let sym = lex_symbol(c, index, &mut input)?;
                 ret.push(sym);
             },
+            i!((index, c)) if symbol_start(c) => {
+                let num = Lexeme::Symbol(LMeta::single(index), c.to_string());
+                ret.push(num);
+            },
+
             i!((index, '"')) => {
                 let s = lex_string(index, &mut input)?;
                 ret.push(s);
@@ -122,22 +142,12 @@ fn lex_item(c : char, start : usize, target : fn(char) -> bool, input : input!()
 } 
 
 fn lex_number(c : char, start : usize, input : input!()) -> Result<Lexeme, LexError> {
-    fn target(x : char) -> bool {
-        x.is_numeric() || x == '+' || x == '-' || x == '.' || x == 'E' || x == 'e'
-    }
-
-    let (meta, item) = lex_item(c, start, target, input)?;
-
+    let (meta, item) = lex_item(c, start, num_char, input)?;
     Ok(Lexeme::Number(meta, item))
 }
 
 fn lex_symbol(c : char, start : usize, input : input!()) -> Result<Lexeme, LexError> {
-    fn target(x : char) -> bool {
-        x.is_alphanumeric() || x == '_' 
-    }
-
-    let (meta, item) = lex_item(c, start, target, input)?;
-
+    let (meta, item) = lex_item(c, start, symbol_char, input)?;
     Ok(Lexeme::Symbol(meta, item))
 }
 
@@ -255,6 +265,24 @@ mod test {
         assert!(matches!(output[3], Lexeme::Number(_, _)));
         assert_eq!(output[3].meta(), LMeta::multi(26, 34));
         assert_eq!(output[3].value(), "+123e-456");
+    }
+
+    #[test]
+    fn should_lex_digit_followed_by_comma() {
+        let input = "1,";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 2);
+        assert!(matches!(output[0], Lexeme::Number(_, _)));
+        assert!(matches!(output[1], Lexeme::Comma(_)));
+    }
+
+    #[test]
+    fn should_lex_single_symbol_followed_by_comma() {
+        let input = "x,";
+        let output = lex(input).unwrap();
+        assert_eq!(output.len(), 2);
+        assert!(matches!(output[0], Lexeme::Symbol(_, _)));
+        assert!(matches!(output[1], Lexeme::Comma(_)));
     }
 
     #[test]
