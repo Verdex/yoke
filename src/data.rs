@@ -15,7 +15,7 @@ impl LMeta {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Lexeme { 
     RParen(LMeta),
     LParen(LMeta),
