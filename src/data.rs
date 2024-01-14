@@ -7,6 +7,9 @@ pub struct LMeta {
 }
 
 impl LMeta {
+    pub fn new() -> Self { 
+        LMeta { start: 0, end: 0 }
+    }
     pub fn single(loc : usize) -> Self {
         LMeta { start: loc, end: loc }
     }
@@ -35,6 +38,29 @@ pub enum Lexeme {
 }
 
 impl Lexeme {
+    pub fn lmatch(&self, other: &Lexeme) -> bool {
+        use Lexeme::*;
+        match (self, other) {
+            (RParen(_), RParen(_)) => true,
+            (LParen(_), LParen(_)) => true,
+            (RAngle(_), RAngle(_)) => true,
+            (LAngle(_), LAngle(_)) => true,
+            (RCurl(_), RCurl(_)) => true,
+            (LCurl(_), LCurl(_)) => true,
+            (RSquare(_), RSquare(_)) => true,
+            (LSquare(_), LSquare(_)) => true,
+            (Punct(_, c1), Punct(_, c2)) if c1 == c2 => true,
+            (Group(_, label1, g1), Group(_, label2, g2)) 
+                if 
+                label1 == label2 
+                && g1.iter().zip(g2.iter()).all(|(a, b)| a.lmatch(b)) => true,
+
+            (String(_, s1), String(_, s2)) if s1 == s2 => true,
+            (Number(_, n1), Number(_, n2)) if n1 == n2 => true,
+            (Symbol(_, s1), Symbol(_, s2)) if s1 == s2 => true,
+            _ => false,
+        }
+    }
     pub fn meta(&self) -> LMeta {
         use Lexeme::*;
         match self {
