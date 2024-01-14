@@ -1,14 +1,14 @@
 
 use crate::data::{LMeta, Lexeme};
 
-pub struct LexGrouper<T> {
+pub struct LexGrouper<T, const N : usize> {
     input : T,
-    pattern : Vec<Pattern>,
+    pattern : [Pattern; N],
     label : String,
     match_buffer : Vec<Lexeme>,
 }
 
-impl<T : Iterator<Item = Lexeme>> Iterator for LexGrouper<T> {
+impl<T : Iterator<Item = Lexeme>, const N : usize> Iterator for LexGrouper<T, N> {
     type Item = Lexeme;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -48,7 +48,7 @@ fn pattern_match(pattern : &[Pattern], data : &[Lexeme]) -> bool {
         match pd {
             (Pattern::Wild, _) => { },
             (Pattern::Pred(f), d) if f(d) => { },
-            (Pattern::Exact(l), d) if l == d => { },
+            (Pattern::Exact(l), d) if l.lmatch(d) => { },
             _ => { return false; },
         }
     }
@@ -62,7 +62,81 @@ pub enum Pattern {
     Pred(fn(&Lexeme) -> bool),
 }
 
-pub fn group<T : Iterator<Item = Lexeme>>(label : String, pattern : Vec<Pattern>, input : T) -> LexGrouper<T> { 
-    // TODO don't allow empty patterns
-    LexGrouper { input, pattern, label, match_buffer: vec![] }
+pub fn group<T : Iterator<Item = Lexeme>, S : AsRef<str>, const N : usize>(label : S, pattern : [Pattern; N], input : T) -> LexGrouper<T, N> { 
+    LexGrouper { input, pattern, label: label.as_ref().to_string(), match_buffer: vec![] }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::data::Lexeme;
+    use crate::parsing::lexer;
+
+    #[test]
+    fn should_group_with_zero_length_input() {
+        let input = "";
+        let tokens = lexer::lex(&input).unwrap();
+        let output = group("label", [Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        assert_eq!(output.len(), 0);
+    }
+
+    #[test]
+    fn should_group_with_zero_length_pattern() {
+        let input = "1 2 3";
+        let tokens = lexer::lex(&input).unwrap();
+        let output = group("label", [], tokens.into_iter()).collect::<Vec<_>>();
+        assert_eq!(output.len(), 3);
+        assert!(matches!(output[0], Lexeme::Number(_, _)));
+        assert!(matches!(output[1], Lexeme::Number(_, _)));
+        assert!(matches!(output[2], Lexeme::Number(_, _)));
+    }
+
+    #[test]
+    fn should_group_with_wild_pattern() {
+        let input = "1 2 3";
+        let tokens = lexer::lex(&input).unwrap();
+        let output = group("label", [Pattern::Wild, Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        assert_eq!(output.len(), 2);
+        assert!(matches!(output[0], Lexeme::Group(_, _, _)));
+        assert!(matches!(output[1], Lexeme::Number(_, _)));
+
+        if let Lexeme::Group(meta, label, ls) = &output[0] {
+            assert_eq!(meta.start, 0);
+            assert_eq!(meta.end, 2);
+            assert_eq!(label, "label");
+            assert_eq!(ls.len(), 2);
+        }
+
+        if let Lexeme::Number(_, n) = &output[1] { 
+            assert_eq!(n, "3");
+        }
+    }
+
+    #[test]
+    fn should_group_with_exact_pattern() {
+        let input = "1 2 3 4";
+        let tokens = lexer::lex(&input).unwrap();
+        let output = group("label", [Pattern::Exact(Lexeme::Number(LMeta::new(), "1".to_string())), Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        assert_eq!(output.len(), 3);
+        assert!(matches!(output[0], Lexeme::Group(_, _, _)));
+        assert!(matches!(output[1], Lexeme::Number(_, _)));
+        assert!(matches!(output[2], Lexeme::Number(_, _)));
+
+        if let Lexeme::Group(meta, label, ls) = &output[0] {
+            assert_eq!(meta.start, 0);
+            assert_eq!(meta.end, 2);
+            assert_eq!(label, "label");
+            assert_eq!(ls.len(), 2);
+        }
+
+        if let Lexeme::Number(_, n) = &output[1] { 
+            assert_eq!(n, "3");
+        }
+
+        if let Lexeme::Number(_, n) = &output[2] { 
+            assert_eq!(n, "4");
+        }
+    }
+
+    // pred
 }
