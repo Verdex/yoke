@@ -12,24 +12,37 @@ impl<T : Iterator<Item = Lexeme>> Iterator for LexGrouper<T> {
     type Item = Lexeme;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.input.next() {
-            None => { },
-            Some(l) => { self.match_buffer.push(l); },
-        }
-        if pattern_match(&self.pattern, &self.match_buffer) {
-            let ls = std::mem::replace(&mut self.match_buffer, vec![]);
-            let start = ls.first().unwrap().meta().start;
-            let end = ls.last().unwrap().meta().end;
-            Some(Lexeme::Group(LMeta::multi(start, end), self.label.clone(), ls))
-        }
-        else {
-            todo!()
+        loop {
+            match self.input.next() {
+                None if self.match_buffer.len() == 0 => { break None; },
+                None if self.match_buffer.len() != self.pattern.len() => { 
+                    let ret = self.match_buffer.remove(0);
+                    break Some(ret); 
+                },
+                None if !pattern_match(self.pattern, self.match_buffer) => { 
+                    let ret = self.match_buffer.remove(0);
+                    break Some(ret); 
+                },
+                Some(l) => { self.match_buffer.push(l); },
+            }
+            if self.match_buffer.len() < self.pattern.len() {
+                continue;
+            }
+            else if self.match_buffer.len() > self.pattern.len() {
+                break Some(self.match_buffer.remove(0));
+            }
+            else if pattern_match(&self.pattern, &self.match_buffer) {
+                let ls = std::mem::replace(&mut self.match_buffer, vec![]);
+                let start = ls.first().unwrap().meta().start;
+                let end = ls.last().unwrap().meta().end;
+                break Some(Lexeme::Group(LMeta::multi(start, end), self.label.clone(), ls));
+            }
         }
     }
 }
 
 fn pattern_match(pattern : &[Pattern], data : &[Lexeme]) -> bool {
-    todo!()
+
 }
 
 #[derive(Debug)]
