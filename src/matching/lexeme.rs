@@ -19,11 +19,12 @@ impl<T : Iterator<Item = Lexeme>> Iterator for LexGrouper<T> {
                     let ret = self.match_buffer.remove(0);
                     break Some(ret); 
                 },
-                None if !pattern_match(self.pattern, self.match_buffer) => { 
+                None if !pattern_match(&self.pattern, &self.match_buffer) => { 
                     let ret = self.match_buffer.remove(0);
                     break Some(ret); 
                 },
                 Some(l) => { self.match_buffer.push(l); },
+                _ => unreachable!(),
             }
             if self.match_buffer.len() < self.pattern.len() {
                 continue;
@@ -42,14 +43,23 @@ impl<T : Iterator<Item = Lexeme>> Iterator for LexGrouper<T> {
 }
 
 fn pattern_match(pattern : &[Pattern], data : &[Lexeme]) -> bool {
-
+    let pds = pattern.iter().zip(data.iter());
+    for pd in pds {
+        match pd {
+            (Pattern::Wild, _) => { },
+            (Pattern::Pred(f), d) if f(d) => { },
+            (Pattern::Exact(l), d) if l == d => { },
+            _ => { return false; },
+        }
+    }
+    true
 }
 
 #[derive(Debug)]
 pub enum Pattern {
     Wild,
     Exact(Lexeme),
-    Pred(fn(Lexeme) -> bool),
+    Pred(fn(&Lexeme) -> bool),
 }
 
 pub fn group<T : Iterator<Item = Lexeme>>(label : String, pattern : Vec<Pattern>, input : T) -> LexGrouper<T> { 
