@@ -8,7 +8,7 @@ enum Type {
     Square,
 }
 
-pub fn parse(input : Vec<Lexeme>) -> Result<Vec<Bracket>, ParseError> {
+pub fn bracket(input : Vec<Lexeme>) -> Result<Vec<Bracket>, ParseError> {
     let mut input = input.into_iter();
     match parse_ast(&mut input)? {
         (None, ast) => Ok(ast),
@@ -80,46 +80,46 @@ mod test {
     use super::super::lexer::lex;
 
     #[test]
-    fn should_parse_paren() {
+    fn should_bracket_paren() {
         let input = "( 1 2 3 )";
         let tokens = lex(input).unwrap();
-        let ast = parse(tokens).unwrap();
+        let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Paren(_, _)));
     }
 
     #[test]
-    fn should_parse_angle() {
+    fn should_bracket_angle() {
         let input = "< 1 2 3 >";
         let tokens = lex(input).unwrap();
-        let ast = parse(tokens).unwrap();
+        let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Angle(_, _)));
     }
 
     #[test]
-    fn should_parse_curl() {
+    fn should_bracket_curl() {
         let input = "{ 1 2 3 }";
         let tokens = lex(input).unwrap();
-        let ast = parse(tokens).unwrap();
+        let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Curl(_, _)));
     }
 
     #[test]
-    fn should_parse_square() {
+    fn should_bracket_square() {
         let input = "[ 1 2 3 ]";
         let tokens = lex(input).unwrap();
-        let ast = parse(tokens).unwrap();
+        let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Square(_, _)));
     }
 
     #[test]
-    fn should_parse_paren_in_paren() {
+    fn should_bracket_paren_in_paren() {
         let input = "( 1 ( 2 3 ) )";
         let tokens = lex(input).unwrap();
-        let ast = parse(tokens).unwrap();
+        let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Paren(_, _)));
         let items = match &ast[0] {
