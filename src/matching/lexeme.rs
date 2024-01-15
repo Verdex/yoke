@@ -138,5 +138,31 @@ mod test {
         }
     }
 
-    // pred
+    #[test]
+    fn should_group_with_pred_pattern() {
+        fn odd(l : &Lexeme) -> bool {
+            match l {
+                Lexeme::Number(_, x) => x.parse::<u8>().unwrap() % 2 == 1,
+                _ => false, 
+            }
+        }
+
+        let input = "1 2 3";
+        let tokens = lexer::lex(&input).unwrap();
+        let output = group("label", [Pattern::Pred(odd), Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        assert_eq!(output.len(), 2);
+        assert!(matches!(output[0], Lexeme::Group(_, _, _)));
+        assert!(matches!(output[1], Lexeme::Number(_, _)));
+
+        if let Lexeme::Group(meta, label, ls) = &output[0] {
+            assert_eq!(meta.start, 0);
+            assert_eq!(meta.end, 2);
+            assert_eq!(label, "label");
+            assert_eq!(ls.len(), 2);
+        }
+
+        if let Lexeme::Number(_, n) = &output[1] { 
+            assert_eq!(n, "3");
+        }
+    }
 }
