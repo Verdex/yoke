@@ -62,9 +62,23 @@ pub enum Pattern {
     Pred(fn(&Lexeme) -> bool),
 }
 
-pub fn group<T : Iterator<Item = Lexeme>, S : AsRef<str>, const N : usize>(label : S, pattern : [Pattern; N], input : T) -> LexGrouper<T, N> { 
+pub fn grouper<T : Iterator<Item = Lexeme>, S : AsRef<str>, const N : usize>(label : S, pattern : [Pattern; N], input : T) -> LexGrouper<T, N> { 
     LexGrouper { input, pattern, label: label.as_ref().to_string(), match_buffer: vec![] }
 }
+
+pub fn r_paren() -> Lexeme { Lexeme::RParen(LMeta::new()) } 
+pub fn l_paren() -> Lexeme { Lexeme::LParen(LMeta::new()) } 
+pub fn r_angle() -> Lexeme { Lexeme::RAngle(LMeta::new()) } 
+pub fn l_angle() -> Lexeme { Lexeme::LAngle(LMeta::new()) } 
+pub fn r_curl() -> Lexeme { Lexeme::RCurl(LMeta::new()) } 
+pub fn l_curl() -> Lexeme { Lexeme::LCurl(LMeta::new()) } 
+pub fn r_square() -> Lexeme { Lexeme::RSquare(LMeta::new()) } 
+pub fn l_square() -> Lexeme { Lexeme::LSquare(LMeta::new()) } 
+pub fn punct(c : char) -> Lexeme { Lexeme::Punct(LMeta::new(), c) }
+pub fn group<S : AsRef<str>>(label : S, ls : Vec<Lexeme>) -> Lexeme { Lexeme::Group(LMeta::new(), label.as_ref().to_string(), ls) }
+pub fn string<S : AsRef<str>>(s : S) -> Lexeme { Lexeme::String(LMeta::new(), s.as_ref().to_string()) }
+pub fn number<S : AsRef<str>>(s : S) -> Lexeme { Lexeme::Number(LMeta::new(), s.as_ref().to_string()) }
+pub fn symbol<S : AsRef<str>>(s : S) -> Lexeme { Lexeme::Symbol(LMeta::new(), s.as_ref().to_string()) }
 
 #[cfg(test)]
 mod test {
@@ -76,7 +90,7 @@ mod test {
     fn should_group_with_zero_length_input() {
         let input = "";
         let tokens = lexer::lex(&input).unwrap();
-        let output = group("label", [Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        let output = grouper("label", [Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
         assert_eq!(output.len(), 0);
     }
 
@@ -84,7 +98,7 @@ mod test {
     fn should_group_with_zero_length_pattern() {
         let input = "1 2 3";
         let tokens = lexer::lex(&input).unwrap();
-        let output = group("label", [], tokens.into_iter()).collect::<Vec<_>>();
+        let output = grouper("label", [], tokens.into_iter()).collect::<Vec<_>>();
         assert_eq!(output.len(), 3);
         assert!(matches!(output[0], Lexeme::Number(_, _)));
         assert!(matches!(output[1], Lexeme::Number(_, _)));
@@ -95,7 +109,7 @@ mod test {
     fn should_group_with_wild_pattern() {
         let input = "1 2 3";
         let tokens = lexer::lex(&input).unwrap();
-        let output = group("label", [Pattern::Wild, Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        let output = grouper("label", [Pattern::Wild, Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
         assert_eq!(output.len(), 2);
         assert!(matches!(output[0], Lexeme::Group(_, _, _)));
         assert!(matches!(output[1], Lexeme::Number(_, _)));
@@ -116,7 +130,7 @@ mod test {
     fn should_group_with_exact_pattern() {
         let input = "1 2 3 4";
         let tokens = lexer::lex(&input).unwrap();
-        let output = group("label", [Pattern::Exact(Lexeme::Number(LMeta::new(), "1".to_string())), Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        let output = grouper("label", [Pattern::Exact(number("1")), Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
         assert_eq!(output.len(), 3);
         assert!(matches!(output[0], Lexeme::Group(_, _, _)));
         assert!(matches!(output[1], Lexeme::Number(_, _)));
@@ -149,7 +163,7 @@ mod test {
 
         let input = "1 2 3";
         let tokens = lexer::lex(&input).unwrap();
-        let output = group("label", [Pattern::Pred(odd), Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
+        let output = grouper("label", [Pattern::Pred(odd), Pattern::Wild], tokens.into_iter()).collect::<Vec<_>>();
         assert_eq!(output.len(), 2);
         assert!(matches!(output[0], Lexeme::Group(_, _, _)));
         assert!(matches!(output[1], Lexeme::Number(_, _)));
