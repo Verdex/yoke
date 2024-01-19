@@ -1,5 +1,5 @@
 
-use crate::data::{ Lexeme, Bracket, ParseError, LMeta };
+use crate::data::{ Lexeme, Bracket, BracketError, LMeta };
 
 enum Type {
     Paren,
@@ -8,15 +8,15 @@ enum Type {
     Square,
 }
 
-pub fn bracket(input : Vec<Lexeme>) -> Result<Vec<Bracket>, ParseError> {
+pub fn bracket(input : Vec<Lexeme>) -> Result<Vec<Bracket>, BracketError> {
     let mut input = input.into_iter();
     match parse_ast(&mut input)? {
         (None, ast) => Ok(ast),
-        (Some(x), _) => Err(ParseError::NotAllInputConsumed(x.meta().start)),
+        (Some(x), _) => Err(BracketError::NotAllInputConsumed(x.meta().start)),
     }
 }
 
-fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<(Option<Lexeme>, Vec<Bracket>), ParseError> {
+fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<(Option<Lexeme>, Vec<Bracket>), BracketError> {
 
     let mut ret = vec![];
     let end = loop {
@@ -49,7 +49,7 @@ fn parse_ast(input : &mut impl Iterator<Item = Lexeme>) -> Result<(Option<Lexeme
     Ok((end, ret))
 }
 
-fn parse_bracket(t : Type, initial : usize, input : &mut impl Iterator<Item = Lexeme>) -> Result<Bracket, ParseError> {
+fn parse_bracket(t : Type, initial : usize, input : &mut impl Iterator<Item = Lexeme>) -> Result<Bracket, BracketError> {
     fn to_expected(t : Type) -> char {
         match t {
             Type::Paren => ')',
@@ -68,9 +68,9 @@ fn parse_bracket(t : Type, initial : usize, input : &mut impl Iterator<Item = Le
         (t, Some(l)) => {
             let found = l.value().chars().nth(0).unwrap();
             let terminal = l.meta().start;
-            Err(ParseError::MissingEndBracket { initial, terminal, found, expected: to_expected(t) })
+            Err(BracketError::MissingEndBracket { initial, terminal, found, expected: to_expected(t) })
         },
-        (t, None) => Err(ParseError::EofInsteadOfEndBracket { initial, expected: to_expected(t) }),
+        (t, None) => Err(BracketError::EofInsteadOfEndBracket { initial, expected: to_expected(t) }),
     }
 }
 

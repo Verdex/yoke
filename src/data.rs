@@ -121,27 +121,27 @@ impl Bracket {
 }
 
 #[derive(Debug)]
-pub enum ParseError {
+pub enum BracketError {
     MissingEndBracket { initial: usize, terminal : usize, found : char, expected : char},
     EofInsteadOfEndBracket { initial: usize, expected : char },
     NotAllInputConsumed(usize),
 }
 
-impl std::fmt::Display for ParseError {
+impl std::fmt::Display for BracketError {
     fn fmt(&self, f : &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            ParseError::MissingEndBracket { initial, terminal, found, expected } => 
+            BracketError::MissingEndBracket { initial, terminal, found, expected } => 
                 write!(f, "Encountered incorrect bracket at {}.  Expected {}, but found {} matching {}", 
                     terminal, expected, found, initial),
-            ParseError::EofInsteadOfEndBracket { initial, expected } => 
+            BracketError::EofInsteadOfEndBracket { initial, expected } => 
                 write!(f, "Encountered end of file instead of bracket.  Expected {}, but found end of file matching {}",
                     expected, initial),
-            ParseError::NotAllInputConsumed(index) => write!(f, "Not all input consumed during parsing: {}", index),
+            BracketError::NotAllInputConsumed(index) => write!(f, "Not all input consumed during parsing: {}", index),
         }
     }
 }
 
-impl std::error::Error for ParseError { }
+impl std::error::Error for BracketError { }
 
 #[derive(Debug)]
 pub enum LexError {
