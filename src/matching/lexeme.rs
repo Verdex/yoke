@@ -42,6 +42,44 @@ impl<T : Iterator<Item = Lexeme>, const N : usize> Iterator for LexGrouper<T, N>
     }
 }
 
+pub struct LexProcessor<T, F, const N : usize> {
+    input : T,
+    f : F,
+    pattern : [Pattern; N],
+    match_buffer : Vec<Lexeme>,
+}
+
+impl<T : Iterator<Item = Lexeme>, F : FnMut(Vec<Lexeme>) -> Vec<Lexeme>, const N : usize>
+    Iterator for LexProcessor<T, F, N> {
+
+    type Item = Vec<Lexeme>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.input.next() {
+                None if self.match_buffer.len() == 0 => { break None; },
+                None if self.match_buffer.len() != self.pattern.len() => { 
+                    break Some(std::mem::replace(&mut self.match_buffer, vec![]))
+                },
+                None if !pattern_match(&self.pattern, &self.match_buffer) => { 
+                    break Some(std::mem::replace(&mut self.match_buffer, vec![]))
+                },
+                Some(l) => { self.match_buffer.push(l); },
+                _ => unreachable!(),
+            }
+            if self.match_buffer.len() < self.pattern.len() {
+                continue;
+            }
+            else if self.match_buffer.len() > self.pattern.len() {
+                break Some(vec![self.match_buffer.remove(0)]);
+            }
+            else if pattern_match(&self.pattern, &self.match_buffer) {
+                break Some((self.f)(std::mem::replace(&mut self.match_buffer, vec![])));
+            }
+        }
+    }
+}
+
 fn pattern_match(pattern : &[Pattern], data : &[Lexeme]) -> bool {
     let pds = pattern.iter().zip(data.iter());
     for pd in pds {
@@ -66,6 +104,15 @@ pub fn grouper<T : Iterator<Item = Lexeme>, S : AsRef<str>, const N : usize>(lab
     LexGrouper { input, pattern, label: label.as_ref().to_string(), match_buffer: vec![] }
 }
 
+pub fn process< T : Iterator<Item = Lexeme>
+              , F : FnMut(Vec<Lexeme>) -> Vec<Lexeme>
+              , const N : usize
+              >(pattern : [Pattern; N], f : F, input : T) -> LexProcessor<T, F, N> {
+
+    LexProcessor { input, f, pattern, match_buffer: vec![] }
+    
+}
+
 pub fn r_paren() -> Lexeme { Lexeme::RParen(LMeta::new()) } 
 pub fn l_paren() -> Lexeme { Lexeme::LParen(LMeta::new()) } 
 pub fn r_angle() -> Lexeme { Lexeme::RAngle(LMeta::new()) } 
@@ -85,6 +132,13 @@ mod test {
     use super::*;
     use crate::data::Lexeme;
     use crate::parsing::lexer;
+
+    #[test]
+    fn blarg() {
+        let input = "1 2 3";
+        let tokens = lexer::lex(&input).unwrap();
+        let output = process([Pattern::Wild], |mut ls| { ls.push(number("1")); ls }, tokens.into_iter()).flatten().collect::<Vec<_>>();
+    }
 
     #[test]
     fn should_group_with_zero_length_input() {
