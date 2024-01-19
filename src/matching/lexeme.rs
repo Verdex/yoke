@@ -101,10 +101,36 @@ mod test {
     use crate::parsing::lexer;
 
     #[test]
-    fn blarg() {
+    fn should_process() {
         let input = "1 2 3";
         let tokens = lexer::lex(&input).unwrap();
-        let output = process([Pattern::Wild], |mut ls| { ls.push(number("1")); ls }, tokens.into_iter()).flatten().collect::<Vec<_>>();
+        let output = process([Pattern::Wild], |mut ls| { ls.push(number("0")); ls }, tokens.into_iter()).flatten().collect::<Vec<_>>();
+        assert_eq!(output.len(), 6);
+        assert!(matches!(output[0], Lexeme::Number(_, _)));
+        assert!(matches!(output[1], Lexeme::Number(_, _)));
+        assert!(matches!(output[2], Lexeme::Number(_, _)));
+        assert!(matches!(output[3], Lexeme::Number(_, _)));
+        assert!(matches!(output[4], Lexeme::Number(_, _)));
+        assert!(matches!(output[5], Lexeme::Number(_, _)));
+
+        if let Lexeme::Number(_, n) = &output[0] { 
+            assert_eq!(n, "1");
+        }
+        if let Lexeme::Number(_, n) = &output[1] { 
+            assert_eq!(n, "0");
+        }
+        if let Lexeme::Number(_, n) = &output[2] { 
+            assert_eq!(n, "2");
+        }
+        if let Lexeme::Number(_, n) = &output[3] { 
+            assert_eq!(n, "0");
+        }
+        if let Lexeme::Number(_, n) = &output[4] { 
+            assert_eq!(n, "3");
+        }
+        if let Lexeme::Number(_, n) = &output[5] { 
+            assert_eq!(n, "0");
+        }
     }
 
     #[test]
