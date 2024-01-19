@@ -1,47 +1,6 @@
 
 use crate::data::{LMeta, Lexeme};
 
-pub struct LexGrouper<T, const N : usize> {
-    input : T,
-    pattern : [Pattern; N],
-    label : String,
-    match_buffer : Vec<Lexeme>,
-}
-
-impl<T : Iterator<Item = Lexeme>, const N : usize> Iterator for LexGrouper<T, N> {
-    type Item = Lexeme;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            match self.input.next() {
-                None if self.match_buffer.len() == 0 => { break None; },
-                None if self.match_buffer.len() != self.pattern.len() => { 
-                    let ret = self.match_buffer.remove(0);
-                    break Some(ret); 
-                },
-                None if !pattern_match(&self.pattern, &self.match_buffer) => { 
-                    let ret = self.match_buffer.remove(0);
-                    break Some(ret); 
-                },
-                Some(l) => { self.match_buffer.push(l); },
-                _ => unreachable!(),
-            }
-            if self.match_buffer.len() < self.pattern.len() {
-                continue;
-            }
-            else if self.match_buffer.len() > self.pattern.len() {
-                break Some(self.match_buffer.remove(0));
-            }
-            else if pattern_match(&self.pattern, &self.match_buffer) {
-                let ls = std::mem::replace(&mut self.match_buffer, vec![]);
-                let start = ls.first().unwrap().meta().start;
-                let end = ls.last().unwrap().meta().end;
-                break Some(Lexeme::Group(LMeta::multi(start, end), self.label.clone(), ls));
-            }
-        }
-    }
-}
-
 pub struct LexProcessor<T, F, const N : usize> {
     input : T,
     f : F,
@@ -100,8 +59,17 @@ pub enum Pattern {
     Pred(fn(&Lexeme) -> bool),
 }
 
-pub fn grouper<T : Iterator<Item = Lexeme>, S : AsRef<str>, const N : usize>(pattern : [Pattern; N], label : S, input : T) -> LexGrouper<T, N> { 
-    LexGrouper { input, pattern, label: label.as_ref().to_string(), match_buffer: vec![] }
+pub fn grouper<T : Iterator<Item = Lexeme>, S : AsRef<str>, const N : usize>(pattern : [Pattern; N], label : S, input : T) -> impl Iterator<Item = Lexeme> { 
+
+    let label = label.as_ref().to_string();
+
+    let f = move |ls : Vec<Lexeme>| {
+        let start = ls.first().unwrap().meta().start;
+        let end = ls.last().unwrap().meta().end;
+        vec![Lexeme::Group(LMeta::multi(start, end), label.clone(), ls)]
+    };
+
+    LexProcessor { input, f, pattern, match_buffer: vec![] }.flatten()
 }
 
 pub fn process< T : Iterator<Item = Lexeme>
