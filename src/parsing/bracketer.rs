@@ -31,8 +31,7 @@ enum Type {
     Square,
 }
 
-pub fn bracket(input : Vec<Lexeme>) -> Result<Vec<Bracket>, BracketError> {
-    let mut input = input.into_iter();
+pub fn bracket(mut input : impl Iterator<Item = Lexeme>) -> Result<Vec<Bracket>, BracketError> {
     match parse_ast(&mut input)? {
         (None, ast) => Ok(ast),
         (Some(x), _) => Err(BracketError::NotAllInputConsumed(x.meta().start)),
@@ -105,7 +104,7 @@ mod test {
     #[test]
     fn should_bracket_paren() {
         let input = "( 1 2 3 )";
-        let tokens = lex(input).unwrap();
+        let tokens = lex(input).unwrap().into_iter();
         let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Paren(_, _)));
@@ -114,7 +113,7 @@ mod test {
     #[test]
     fn should_bracket_angle() {
         let input = "< 1 2 3 >";
-        let tokens = lex(input).unwrap();
+        let tokens = lex(input).unwrap().into_iter();
         let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Angle(_, _)));
@@ -123,7 +122,7 @@ mod test {
     #[test]
     fn should_bracket_curl() {
         let input = "{ 1 2 3 }";
-        let tokens = lex(input).unwrap();
+        let tokens = lex(input).unwrap().into_iter();
         let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Curl(_, _)));
@@ -132,7 +131,7 @@ mod test {
     #[test]
     fn should_bracket_square() {
         let input = "[ 1 2 3 ]";
-        let tokens = lex(input).unwrap();
+        let tokens = lex(input).unwrap().into_iter();
         let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Square(_, _)));
@@ -141,7 +140,7 @@ mod test {
     #[test]
     fn should_bracket_paren_in_paren() {
         let input = "( 1 ( 2 3 ) )";
-        let tokens = lex(input).unwrap();
+        let tokens = lex(input).unwrap().into_iter();
         let ast = bracket(tokens).unwrap();
         assert_eq!(ast.len(), 1);
         assert!(matches!(ast[0], Bracket::Paren(_, _)));
