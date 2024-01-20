@@ -1,6 +1,23 @@
 
 
-use crate::data::{Lexeme, LMeta, LexError};
+use crate::data::{Lexeme, LMeta};
+
+#[derive(Debug)]
+pub enum LexError {
+    EncounteredEndInString,
+    UnexpectedEscapeInString(usize, char),
+}
+
+impl std::fmt::Display for LexError {
+    fn fmt(&self, f : &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            LexError::EncounteredEndInString => write!(f, "Encountered end of file while lexing string."),
+            LexError::UnexpectedEscapeInString(index, c) => write!(f, "Encountered unexpected escape in string: {}::{}", index, c),
+        }
+    }
+}
+
+impl std::error::Error for LexError { }
 
 macro_rules! i {
     ($p:pat, end) => { Some( (Some($p), None) ) };
