@@ -276,6 +276,7 @@ mod test {
         if let Lexeme::Group(meta, label, ls) = &output[2] {
             assert_eq!(meta.start, 6);
             assert_eq!(meta.end, 10);
+            assert_eq!(label, "float");
             assert_eq!(ls.len(), 3);
             assert!(matches!(ls[0], Lexeme::Number(_, _)));
             assert!(matches!(ls[1], Lexeme::Punct(_, _)));
