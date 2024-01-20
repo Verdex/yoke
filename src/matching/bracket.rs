@@ -38,8 +38,20 @@ impl<T> From<(Vec<Pattern>, fn(&[Bracket]) -> T)> for Rule<T> {
     }
 }
 
-pub fn process<T, I : Iterator<Item = Bracket>>(rules : &[Rule<T>], input : I)  {
+#[derive(Debug)]
+pub enum BracketProcessError {
+}
+
+impl std::fmt::Display for BracketProcessError {
+    fn fmt(&self, f : &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "")
+    }
+}
+
+impl std::error::Error for BracketProcessError { }
+
+pub fn process<T, I : Iterator<Item = Bracket>>(rules : &[Rule<T>], input : I) -> Result<Vec<T>, BracketProcessError> {
 
     
-        
+       todo!() 
 }
