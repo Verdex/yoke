@@ -249,9 +249,51 @@ mod test {
             Pattern::Pred(|x| matches!(x, Lexeme::Number(_, _)))
         }
 
-        let input = "0 12.34 5";
+        let input = "1.2 0 12.34 5 3.4";
         let tokens = lexer::lex(&input).unwrap().into_iter();
         let output = grouper([any_num(), Pattern::Exact(punct('.')), any_num()], "float", tokens).collect::<Vec<_>>();
-        assert_eq!(output.len(), 3);
+        assert_eq!(output.len(), 5);
+        assert!(matches!(output[0], Lexeme::Group(_, _, _)));
+        assert!(matches!(output[1], Lexeme::Number(_, _)));
+        assert!(matches!(output[2], Lexeme::Group(_, _, _)));
+        assert!(matches!(output[3], Lexeme::Number(_, _)));
+        assert!(matches!(output[4], Lexeme::Group(_, _, _)));
+
+        if let Lexeme::Group(meta, label, ls) = &output[0] {
+            assert_eq!(meta.start, 0);
+            assert_eq!(meta.end, 2);
+            assert_eq!(label, "float");
+            assert_eq!(ls.len(), 3);
+            assert!(matches!(ls[0], Lexeme::Number(_, _)));
+            assert!(matches!(ls[1], Lexeme::Punct(_, _)));
+            assert!(matches!(ls[2], Lexeme::Number(_, _)));
+        }
+
+        if let Lexeme::Number(_, n) = &output[1] { 
+            assert_eq!(n, "0");
+        }
+
+        if let Lexeme::Group(meta, label, ls) = &output[2] {
+            assert_eq!(meta.start, 6);
+            assert_eq!(meta.end, 10);
+            assert_eq!(ls.len(), 3);
+            assert!(matches!(ls[0], Lexeme::Number(_, _)));
+            assert!(matches!(ls[1], Lexeme::Punct(_, _)));
+            assert!(matches!(ls[2], Lexeme::Number(_, _)));
+        }
+
+        if let Lexeme::Number(_, n) = &output[3] { 
+            assert_eq!(n, "5");
+        }
+
+        if let Lexeme::Group(meta, label, ls) = &output[4] {
+            assert_eq!(meta.start, 14);
+            assert_eq!(meta.end, 16);
+            assert_eq!(label, "float");
+            assert_eq!(ls.len(), 3);
+            assert!(matches!(ls[0], Lexeme::Number(_, _)));
+            assert!(matches!(ls[1], Lexeme::Punct(_, _)));
+            assert!(matches!(ls[2], Lexeme::Number(_, _)));
+        }
     }
 }
