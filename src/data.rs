@@ -108,6 +108,16 @@ pub enum Bracket {
 }
 
 impl Bracket {
+    pub fn lmatch(&self, other : &Bracket) -> bool {
+        match (self, other) {
+            (Bracket::Paren(_, xs), Bracket::Paren(_, ys)) => xs.iter().zip(ys.iter()).map(|(x, y)| x.lmatch(y)).all(|z| z),
+            (Bracket::Angle(_, xs), Bracket::Angle(_, ys)) => xs.iter().zip(ys.iter()).map(|(x, y)| x.lmatch(y)).all(|z| z),
+            (Bracket::Curl(_, xs), Bracket::Curl(_, ys)) => xs.iter().zip(ys.iter()).map(|(x, y)| x.lmatch(y)).all(|z| z),
+            (Bracket::Square(_, xs), Bracket::Square(_, ys)) => xs.iter().zip(ys.iter()).map(|(x, y)| x.lmatch(y)).all(|z| z),
+            (Bracket::Lex(x), Bracket::Lex(y)) => x.lmatch(y),
+            _ => false,
+        }
+    }
     pub fn meta(&self) -> LMeta {
         use Bracket::*;
         match self {
