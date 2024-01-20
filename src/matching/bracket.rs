@@ -82,3 +82,35 @@ pub fn process<T, I : Iterator<Item = Bracket>>(rules : &[Rule<T>], mut input : 
 
     Ok(ret)
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::parsing::lexer;
+    use crate::parsing::bracketer;
+    use crate::data::*;
+
+    #[test]
+    fn should_process_brackets() {
+        fn is_paren(x : &Bracket) -> bool { matches!(x, Bracket::Paren(_, _)) }
+        fn is_curl(x : &Bracket) -> bool { matches!(x, Bracket::Curl(_, _)) }
+
+        let input = "if (stuff) { a = 1; b = 2; } else { c = y(1, 2, 3); }";
+        let tokens = lexer::lex(&input).unwrap().into_iter();
+        let brackets = bracketer::bracket(tokens).unwrap().into_iter();
+        let if_sym = Bracket::Lex(Lexeme::Symbol(LMeta::new(), "if".to_string()));
+        let else_sym = Bracket::Lex(Lexeme::Symbol(LMeta::new(), "else".to_string()));
+
+        let if_rule = Rule::new(vec![Pattern::Exact(if_sym), Pattern::Pred(is_paren), Pattern::Pred(is_curl)], 
+                               |_| 0);
+        let else_rule = Rule::new(vec![Pattern::Exact(else_sym), Pattern::Pred(is_curl)],
+                                 |_| 1);
+        let rules = vec![if_rule, else_rule];
+
+        let output = process(&rules, brackets).unwrap();
+
+        assert_eq!(output.len(), 2);
+        assert_eq!(output[0], 0);
+        assert_eq!(output[1], 1);
+    }
+}
