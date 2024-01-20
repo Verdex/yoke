@@ -15,25 +15,41 @@ impl<T : Iterator<Item = Lexeme>, F : FnMut(Vec<Lexeme>) -> Vec<Lexeme>, const N
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
+            if self.pattern.len() == 0 {
+                match self.input.next() {
+                    None => { return None; },
+                    Some(l) => { return Some(vec![l]); },
+                }
+            }
+            if self.match_buffer.len() == self.pattern.len() && pattern_match(&self.pattern, &self.match_buffer) {
+                return Some((self.f)(std::mem::replace(&mut self.match_buffer, vec![])));
+            }
             match self.input.next() {
                 None if self.match_buffer.len() == 0 => { break None; },
-                None if self.match_buffer.len() != self.pattern.len() => { 
-                    break Some(std::mem::replace(&mut self.match_buffer, vec![]))
+                None if self.match_buffer.len() < self.pattern.len() => { 
+                    return Some(std::mem::replace(&mut self.match_buffer, vec![]));
                 },
-                None if !pattern_match(&self.pattern, &self.match_buffer) => { 
-                    break Some(std::mem::replace(&mut self.match_buffer, vec![]))
+                None if self.match_buffer.len() > self.pattern.len() => { 
+                    return Some(vec![self.match_buffer.remove(0)]);
                 },
-                Some(l) => { self.match_buffer.push(l); },
-                _ => unreachable!(),
-            }
-            if self.match_buffer.len() < self.pattern.len() {
-                continue;
-            }
-            else if self.match_buffer.len() > self.pattern.len() {
-                break Some(vec![self.match_buffer.remove(0)]);
-            }
-            else if pattern_match(&self.pattern, &self.match_buffer) {
-                break Some((self.f)(std::mem::replace(&mut self.match_buffer, vec![])));
+                None if pattern_match(&self.pattern, &self.match_buffer) => { 
+                    return Some((self.f)(std::mem::replace(&mut self.match_buffer, vec![])));
+                },
+                None => {
+                    return Some(std::mem::replace(&mut self.match_buffer, vec![]));
+                },
+                Some(l) => {
+                    self.match_buffer.push(l);
+                    if self.match_buffer.len() > self.pattern.len() {
+                        return Some(vec![self.match_buffer.remove(0)]);
+                    }
+                    else if self.match_buffer.len() < self.pattern.len() {
+                        continue;
+                    }
+                    else if pattern_match(&self.pattern, &self.match_buffer) {
+                        return Some((self.f)(std::mem::replace(&mut self.match_buffer, vec![])));
+                    }
+                }
             }
         }
     }
@@ -225,5 +241,17 @@ mod test {
         if let Lexeme::Number(_, n) = &output[1] { 
             assert_eq!(n, "3");
         }
+    }
+    
+    #[test]
+    fn should_group_float_like_structure() {
+        fn any_num() -> Pattern {
+            Pattern::Pred(|x| matches!(x, Lexeme::Number(_, _)))
+        }
+
+        let input = "0 12.34 5";
+        let tokens = lexer::lex(&input).unwrap().into_iter();
+        let output = grouper([any_num(), Pattern::Exact(punct('.')), any_num()], "float", tokens).collect::<Vec<_>>();
+        assert_eq!(output.len(), 3);
     }
 }
