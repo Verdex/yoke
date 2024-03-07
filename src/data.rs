@@ -98,7 +98,7 @@ impl Lexeme {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Bracket {
     Paren(LMeta, Vec<Bracket>),
     Angle(LMeta, Vec<Bracket>),
